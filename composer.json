@@ -1,0 +1,76 @@
+{
+    "name": "rechtlogisch/evatr",
+    "version": "0.0.1",
+    "description": "Checks a VAT-ID using the eVatR REST-API of the German Federal Central Tax Office (Bundeszentralamt für Steuern, BZSt)",
+    "keywords": [
+        "rechtlogisch",
+        "bzst",
+        "evatr",
+        "germany",
+        "wrapper",
+        "vat-id"
+    ],
+    "homepage": "https://github.com/rechtlogisch/evatr",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Krzysztof Tomasz Zembrowski",
+            "email": "zembrowski@users.noreply.github.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.9",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "mockery/mockery": "^1.6",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-type-coverage": "^3.5",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "roave/security-advisories": "dev-latest"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rechtlogisch\\Evatr\\": "src"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "arch": "vendor/bin/pest --group=arch",
+        "coverage": "vendor/bin/pest --coverage --min=95 --exclude-group=arch --exclude-group=external",
+        "docs": "php -r \"file_put_contents('docs' . DIRECTORY_SEPARATOR . 'statusmeldungen.json', file_get_contents('https://api.evatr.vies.bzst.de/v1/info/statusmeldungen'));\"",
+        "external": "vendor/bin/pest --group=external",
+        "format": "vendor/bin/pint",
+        "quality": [
+            "@arch",
+            "@format",
+            "@test",
+            "@analyse",
+            "@types",
+            "@coverage"
+        ],
+        "test": "vendor/bin/pest --exclude-group=arch --exclude-group=external",
+        "types": "vendor/bin/pest --type-coverage --min=100"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

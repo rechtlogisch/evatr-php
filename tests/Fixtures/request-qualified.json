@@ -1,0 +1,8 @@
+{
+    "anfragendeUstid": "DE123456789",
+    "angefragteUstid": "ATU12345678",
+    "firmenname": "Test GmbH",
+    "strasse": "Teststr. 1",
+    "plz": "12345",
+    "ort": "Stadt"
+}
