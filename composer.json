@@ -50,6 +50,7 @@
         "analyse": "vendor/bin/phpstan analyse",
         "arch": "vendor/bin/pest --group=arch",
         "coverage": "vendor/bin/pest --coverage --min=95 --exclude-group=arch --exclude-group=external",
+        "ci": "vendor/bin/pest --exclude-group=arch --exclude-group=external --log-junit junit.xml",
         "docs": "php -r \"file_put_contents('docs' . DIRECTORY_SEPARATOR . 'statusmeldungen.json', file_get_contents('https://api.evatr.vies.bzst.de/v1/info/statusmeldungen'));\"",
         "external": "vendor/bin/pest --group=external",
         "format": "vendor/bin/pint",
