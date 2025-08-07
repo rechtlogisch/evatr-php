@@ -51,11 +51,11 @@ jobs:
       - name: Create empty .env file
         run: touch .env
 
-      - name: Execute tests
-        run: composer test
-
       - name: Download docs
         run: composer docs
+
+      - name: Execute tests
+        run: composer test
 
       - name: Run test coverage
         run: composer coverage
