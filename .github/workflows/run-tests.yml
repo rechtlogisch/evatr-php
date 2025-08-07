@@ -58,11 +58,11 @@ jobs:
         run: composer test
 
       - name: Run test coverage
-        if: matrix.php == '8.4'
+        if: matrix.php == '8.4' && matrix.stability == 'prefer-stable' && matrix.os == 'ubuntu-latest'
         run: composer coverage
 
       - name: Upload code coverage to Codecov
-        if: matrix.php == '8.4'
+        if: matrix.php == '8.4' && matrix.stability == 'prefer-stable' && matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
