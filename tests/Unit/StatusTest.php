@@ -50,7 +50,8 @@ it('checks descriptions against statusmeldungen.json', function () {
     // Read the statusmeldungen.json file
     $statusmeldungenPath = dirname(__DIR__, 2).'/docs/statusmeldungen.json';
     $statusmeldungenContent = file_get_contents($statusmeldungenPath);
-    $statusmeldungen = json_decode($statusmeldungenContent, true);
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $statusmeldungen = json_decode($statusmeldungenContent, true, 512, JSON_THROW_ON_ERROR);
 
     // Create a lookup array for status messages
     $statusMessages = [];

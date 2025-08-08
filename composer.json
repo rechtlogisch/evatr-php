@@ -1,6 +1,6 @@
 {
     "name": "rechtlogisch/evatr",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Checks a VAT-ID using the eVatR REST-API of the German Federal Central Tax Office (Bundeszentralamt für Steuern, BZSt)",
     "keywords": [
         "rechtlogisch",
@@ -49,9 +49,13 @@
     "scripts": {
         "analyse": "vendor/bin/phpstan analyse",
         "arch": "vendor/bin/pest --group=arch",
+        "compare:status": "php bin/compare-status-messages.php",
         "coverage": "vendor/bin/pest --coverage --min=95 --exclude-group=arch --exclude-group=external",
         "ci": "vendor/bin/pest --exclude-group=arch --exclude-group=external --log-junit junit.xml",
-        "docs": "php -r \"file_put_contents('docs' . DIRECTORY_SEPARATOR . 'statusmeldungen.json', file_get_contents('https://api.evatr.vies.bzst.de/v1/info/statusmeldungen'));\"",
+        "docs": [
+            "php -r \"file_put_contents('docs' . DIRECTORY_SEPARATOR . 'api-docs.json', file_get_contents('https://api.evatr.vies.bzst.de/api-docs'));\"",
+            "php -r \"file_put_contents('docs' . DIRECTORY_SEPARATOR . 'statusmeldungen.json', file_get_contents('https://api.evatr.vies.bzst.de/v1/info/statusmeldungen'));\""
+        ],
         "external": "vendor/bin/pest --group=external",
         "format": "vendor/bin/pint",
         "quality": [

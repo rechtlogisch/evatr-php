@@ -9,6 +9,7 @@ beforeAll(function () {
 });
 
 it('sends a request', function () {
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = (new Evatr(
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',
@@ -18,6 +19,7 @@ it('sends a request', function () {
 })->group('external');
 
 it('sends a request for qualified confirmation', function () {
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = (new Evatr(
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',
@@ -34,6 +36,7 @@ it('sends a request with own data', function () {
     hasVatId(Variables::VATID_OWN);
     hasVatId(Variables::VATID_FOREIGN);
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = (new Evatr(
         vatIdOwn: $_ENV[Variables::VATID_OWN->name],
         vatIdForeign: $_ENV[Variables::VATID_FOREIGN->name],
@@ -43,6 +46,7 @@ it('sends a request with own data', function () {
 })->group('external');
 
 it('handles 400', function () {
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = (new Evatr(
         vatIdOwn: 'DE123456789', // dummy
         vatIdForeign: 'ATU12345679', // dummy
@@ -52,6 +56,7 @@ it('handles 400', function () {
 })->group('external', 'error-handling');
 
 it('sends a request to check a German VAT-ID, and the specific own VAT-ID is not allowed to check German VAT-IDs', function () {
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = (new Evatr(
         vatIdOwn: 'DE123456789', // dummy
         vatIdForeign: 'DE987654321', // dummy
@@ -61,6 +66,7 @@ it('sends a request to check a German VAT-ID, and the specific own VAT-ID is not
 })->group('external', 'error-handling');
 
 it('returns error when non-German VAT-ID is used as own', function () {
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = (new Evatr(
         vatIdOwn: 'LU98765432', // dummy
         vatIdForeign: 'LU98765432', // dummy

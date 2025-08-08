@@ -21,6 +21,7 @@ it('checkVatId function works with includeRaw parameter', function () {
 });
 
 it('checkVatId function works with includeRaw false', function () {
+    /** @noinspection PhpRedundantOptionalArgumentInspection */
     $result = checkVatId('DE123456789', 'ATU12345678', false);
 
     expect($result)->toBeInstanceOf(ResultDto::class);
@@ -67,6 +68,7 @@ it('confirmVatId function works with includeRaw parameter', function () {
 });
 
 it('confirmVatId function works with includeRaw false', function () {
+    /** @noinspection PhpRedundantOptionalArgumentInspection */
     $result = confirmVatId(
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',

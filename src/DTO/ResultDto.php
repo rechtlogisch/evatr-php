@@ -41,6 +41,7 @@ final class ResultDto
     ) {
         $body = $this->response?->getBody()->getContents();
         // @TODO: handle exceptions and errors properly
+        /** @noinspection PhpUnhandledExceptionInspection */
         $data = $body ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
 
         $this->timestamp = $data['anfrageZeitpunkt'] ?? null;

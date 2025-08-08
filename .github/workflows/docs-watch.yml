@@ -1,0 +1,106 @@
+name: Docs Watch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *" # daily 07:00 UTC
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: docs-watch-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4 with Composer cache
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          tools: composer
+
+      - name: Ensure docs directory exists
+        run: mkdir -p docs
+
+      - name: Restore previous docs state
+        id: restore_prev
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/docs-prev
+          key: docs-state-${{ runner.os }}-${{ github.ref_name }}-
+          restore-keys: |
+            docs-state-${{ runner.os }}-${{ github.ref_name }}-
+            docs-state-${{ runner.os }}-
+
+      - name: Fetch latest docs
+        run: composer docs
+
+      - name: Compute checksums
+        run: |
+          mkdir -p .cache/docs-current
+          find docs -type f -print0 | sort -z | xargs -0 sha256sum > .cache/docs-current/checksums.txt || true
+          [ -f .cache/docs-current/checksums.txt ] || touch .cache/docs-current/checksums.txt
+
+      - name: Compare with previous
+        id: compare
+        run: |
+          if [ -f ".cache/docs-prev/checksums.txt" ]; then
+            if ! diff -u .cache/docs-prev/checksums.txt .cache/docs-current/checksums.txt > .cache/diff-checksums.txt; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: statusmeldungen.json diff (only when changed)
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          PREV=".cache/docs-prev/statusmeldungen.json"
+          CURR="docs/statusmeldungen.json"
+          if [ -f "$PREV" ] && [ -f "$CURR" ] && ! diff -q "$PREV" "$CURR" >/dev/null; then
+            {
+              echo "## statusmeldungen.json diff"
+              echo
+              echo '```diff'
+              diff -u "$PREV" "$CURR" || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Summarize
+        run: |
+          if [ "${{ steps.compare.outputs.changed }}" = "true" ]; then
+            {
+              echo "## Docs changed"
+              echo
+              echo '```diff'
+              cat .cache/diff-checksums.txt || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No changes detected." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Update baseline for next run
+        run: |
+          rm -rf .cache/docs-prev
+          mkdir -p .cache/docs-prev
+          cp -a docs/. .cache/docs-prev/
+          cp .cache/docs-current/checksums.txt .cache/docs-prev/checksums.txt
+
+      - name: Save new state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/docs-prev
+          key: docs-state-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('.cache/docs-current/checksums.txt') }}
+
+      - name: Fail if changed
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          echo "::error::Docs changed since last run. See summary for details."
+          exit 1

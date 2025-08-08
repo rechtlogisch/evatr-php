@@ -44,8 +44,8 @@ it('can be instantiated with minimal parameters', function () {
 });
 
 it('has correct constants defined', function () {
-    expect(Evatr::BASE_URL)->toBe('https://api.evatr.vies.bzst.de/app/v1');
-    expect(Evatr::URL_VALIDATION)->toBe('https://api.evatr.vies.bzst.de/app/v1/abfrage');
+    expect(Evatr::BASE_URL)->toBe('https://api.evatr.vies.bzst.de/app/v1')
+        ->and(Evatr::URL_VALIDATION)->toBe('https://api.evatr.vies.bzst.de/app/v1/abfrage');
 });
 
 it('can set HTTP client in testing environment', function () {
@@ -82,7 +82,7 @@ it('can enable includeRaw option', function () {
         vatIdForeign: 'ATU12345678'
     );
 
-    $result = $evatr->includeRaw(true);
+    $result = $evatr->includeRaw();
 
     expect($result)->toBe($evatr); // Should return self for method chaining
 });
@@ -129,6 +129,7 @@ it('can perform check with mocked client', function () {
         );
 
     $evatr->setHttpClient($mockClient);
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = $evatr->check();
 
     expect($result)->toBeInstanceOf(ResultDto::class);
@@ -162,6 +163,7 @@ it('can perform check with qualified parameters', function () {
         );
 
     $evatr->setHttpClient($mockClient);
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = $evatr->check();
 
     expect($result)->toBeInstanceOf(ResultDto::class);
@@ -192,9 +194,10 @@ it('method chaining works correctly', function () {
             new Response(200, ['Content-Type' => 'application/json'], fixture('response-simple-ok.json'))
         );
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $result = $evatr
         ->setHttpClient($mockClient)
-        ->includeRaw(true)
+        ->includeRaw()
         ->check();
 
     expect($result)->toBeInstanceOf(ResultDto::class);
