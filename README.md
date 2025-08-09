@@ -41,7 +41,7 @@ $result = (new Evatr(
 ))->check();
 ```
 
-or alternatively use the hepler function:
+or alternatively use the helper function:
 
 ```php
 $result = checkVatId(vatIdOwn: 'DE123456789', vatIdForeign: 'ATU12345678');
@@ -64,7 +64,7 @@ $result = (new Evatr(
 ))->check();
 ```
 
-or alternatively use the hepler function:
+or alternatively use the helper function:
 
 ```php
 $result = confirmVatId(
@@ -248,6 +248,60 @@ The API uses German terms, which have been mapped to parameters:
 | ergStrasse        | street         |
 | ergPlz            | zip            |
 | ergOrt            | location       |
+
+### Language of status messages (EVATR_LANG)
+
+By default, status messages (human-readable descriptions of evatr-* codes) are returned in German. To switch to English messages, set the following environment variable:
+
+```bash
+# .env
+EVATR_LANG=en
+```
+
+> [!WARNING]
+> This English translation of the status messages is unofficial. Use at your own risk.
+
+Supported values:
+- de (default): German messages
+- en: English messages
+
+This affects:
+- Status::description()
+- ResultDto->toArray()['message']
+
+### Additional endpoints and helpers
+
+The client exposes supplementary endpoints of the eVatR API.
+
+#### Status messages
+
+```php
+$messages = Evatr::getStatusMessages(); // array of DTO\StatusMessage
+```
+
+Each StatusMessage item has the shape:
+
+```php
+use Rechtlogisch\Evatr\DTO\StatusMessage;
+
+$statusMessage = new StatusMessage(
+  status: 'evatr-0000',
+  category: 'Result', // category is always English and language-invariant: Result | Error | Hint
+  http: 200,
+  field: null, 
+  message: 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.'
+);
+```
+
+#### EU member states availability
+
+```php
+$states = Evatr::checkAvailability(); // array<string,bool> map of code => available
+// Example: [ 'DE' => true, 'AT' => false, ... ]
+
+// Only not available:
+$notAvailable = Evatr::checkAvailability(onlyNotAvailable: true); // [ 'AT' => false, ... ]
+```
 
 ## Error Handling
 

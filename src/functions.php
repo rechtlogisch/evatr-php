@@ -17,6 +17,7 @@ function checkVatId(string $vatIdOwn, string $vatIdForeign, bool $includeRaw = f
         $evatr->includeRaw();
     }
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     return $evatr->check();
 }
 
@@ -44,5 +45,6 @@ function confirmVatId(
         $evatr->includeRaw();
     }
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     return $evatr->check();
 }

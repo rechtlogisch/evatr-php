@@ -1,0 +1,32 @@
+name: Docs Watch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *" # daily 07:00 UTC
+
+jobs:
+  docs-watch:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: docs-watch-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4 with Composer cache
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Compare embedded German messages with remote
+        run: |
+          set -euo pipefail
+          { echo '## Compare embedded German status messages with remote'; echo; } >> "$GITHUB_STEP_SUMMARY"
+          set -o pipefail
+          composer compare:status 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"

@@ -48,7 +48,7 @@ it('can be instantiated with no parameters', function () {
 it('can set and get includeRaw flag', function () {
     $dto = new RequestDto;
 
-    $result = $dto->setIncludeRaw(true);
+    $result = $dto->setIncludeRaw();
     expect($result)->toBe($dto); // Should return self for method chaining
 
     $result = $dto->setIncludeRaw(false);
