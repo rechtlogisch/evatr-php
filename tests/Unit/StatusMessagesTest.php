@@ -12,7 +12,7 @@ it('returns English messages when EVATR_LANG is set to en', function () {
     $prev = $_ENV['EVATR_LANG'] ?? null;
     $_ENV['EVATR_LANG'] = 'en';
     $msg = StatusMessages::messageFor('evatr-0000');
-    expect($msg)->toBe('The requested VAT ID is valid at the time of the request.');
+    expect($msg)->toBe('The requested VAT-ID is valid at the time of the request.');
     if ($prev === null) {
         unset($_ENV['EVATR_LANG']);
     } else {
