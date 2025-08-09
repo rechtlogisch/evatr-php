@@ -81,7 +81,7 @@ class Evatr
         return $this;
     }
 
-    public function setHttpClient(Client $client): Client|self
+    public function setHttpClient(Client $client): self
     {
         if (($_ENV['APP_ENV'] ?? 'production') !== 'testing') {
             throw new RuntimeException('Setting a custom HTTP client is only allowed in a testing environment.');
