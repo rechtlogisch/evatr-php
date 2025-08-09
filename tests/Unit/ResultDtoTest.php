@@ -100,9 +100,7 @@ it('includes raw response when requested', function () {
         ->and($rawData['headers'])->toHaveKey('X-Custom-Header');
 });
 
-it(/**
- * @throws JsonException
- */ 'does not include raw response when not requested', function () {
+it('does not include raw response when not requested', function () {
     $responseData = [
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
