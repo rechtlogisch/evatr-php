@@ -8,7 +8,6 @@ use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
-use Rechtlogisch\Evatr\DTO\EUMemberState;
 use Rechtlogisch\Evatr\DTO\RequestDto;
 use Rechtlogisch\Evatr\DTO\ResultDto;
 use Rechtlogisch\Evatr\DTO\StatusMessage;
@@ -121,7 +120,7 @@ class Evatr
 
         $messages = [];
         foreach ($data as $entry) {
-            $messages[] = StatusMessage::fromArray($entry);
+            $messages[$entry['status']] = StatusMessage::fromArray($entry);
         }
 
         return $messages;
@@ -130,25 +129,29 @@ class Evatr
     /**
      * Retrieve availability of EU member states from the API.
      *
-     * @return list<EUMemberState>
+     * @param  bool  $onlyNotAvailable  When true, returns only entries where availability is false.
+     * @param  Client|null  $testClient  Optional client (allowed only in testing env)
+     * @return array<string,bool> Map of country code (alpha2) => availability
      *
      * @throws GuzzleException
      * @throws JsonException
      */
-    public static function checkAvailability(?Client $client = null): array
+    public static function checkAvailability(bool $onlyNotAvailable = false, ?Client $testClient = null): array
     {
-        $client ??= new Client([
-            'http_errors' => false,
-        ]);
+        $client = self::decideHttpClient($testClient);
 
         $response = $client->get(self::URL_EU_MEMBER_STATES);
         $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
-        $states = [];
+        $map = [];
         foreach ($data as $entry) {
-            $states[] = EUMemberState::fromArray($entry);
+            $map[$entry['alpha2']] = (bool) ($entry['verfuegbar'] ?? false);
         }
 
-        return $states;
+        if ($onlyNotAvailable === true) {
+            return array_filter($map, static fn (bool $available): bool => $available === false);
+        }
+
+        return $map;
     }
 }

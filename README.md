@@ -293,18 +293,11 @@ $statusMessage = new StatusMessage(
 #### EU member states availability
 
 ```php
-$states = Evatr::checkAvailability(); // array of DTO\EUMemberState
-```
+$states = Evatr::checkAvailability(); // array<string,bool> map of code => available
+// Example: [ 'DE' => true, 'AT' => false, ... ]
 
-Each EUMemberState item has the shape:
-
-```php
-use Rechtlogisch\Evatr\DTO\EUMemberState;
-
-$state = new EUMemberState(
-  code: 'DE',
-  available: true,
-);
+// Only not available:
+$notAvailable = Evatr::checkAvailability(onlyNotAvailable: true); // [ 'AT' => false, ... ]
 ```
 
 ## Error Handling
