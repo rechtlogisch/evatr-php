@@ -259,7 +259,7 @@ EVATR_LANG=en
 ```
 
 > [!WARNING]
-> This English translation of the status messages is an unofficial. Use at your own risk.
+> This English translation of the status messages is unofficial. Use at your own risk.
 
 Supported values:
 - de (default): German messages
