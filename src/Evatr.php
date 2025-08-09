@@ -106,7 +106,7 @@ class Evatr
     /**
      * Retrieve status messages from the API.
      *
-     * @return list<StatusMessage>
+     * @return array<string, StatusMessage>
      *
      * @throws GuzzleException
      * @throws JsonException
