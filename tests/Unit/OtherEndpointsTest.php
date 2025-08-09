@@ -19,8 +19,10 @@ it('can fetch status messages', function () {
     $messages = Evatr::getStatusMessages($mock);
 
     expect($messages)->toBeArray()->not->toBeEmpty();
-    $first = array_values($messages)[0];
-    expect($first)->toBeInstanceOf(StatusMessage::class);
+    $firstKey = array_keys($messages)[0];
+    expect($firstKey)->toBeString()->toBe('evatr-0000');
+    $firstValue = array_values($messages)[0];
+    expect($firstValue)->toBeInstanceOf(StatusMessage::class);
 });
 
 it('can fetch EU member states availability as map', function () {
