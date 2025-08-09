@@ -45,6 +45,8 @@ final class StatusMessages
 
     /**
      * @var array<string, array{category: ?string, httpCode: ?int, field: ?string, message: string}>
+     *
+     * Warning: This is an unofficial translation. Use at your own risk.
      */
     public const MESSAGES_EN = [
         'evatr-0000' => ['category' => 'Result', 'httpCode' => 200, 'field' => null, 'message' => 'The foreign VAT-ID is valid at the time of the request.'],

@@ -258,6 +258,9 @@ By default, status messages (human-readable descriptions of evatr-* codes) are r
 EVATR_LANG=en
 ```
 
+> [!WARNING]
+> This English translation of the status messages is an unofficial. Use at your own risk.
+
 Supported values:
 - de (default): German messages
 - en: English messages
