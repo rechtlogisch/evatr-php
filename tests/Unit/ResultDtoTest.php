@@ -10,6 +10,7 @@ use Rechtlogisch\Evatr\Exception\ErrorResponse;
 
 it('parses response with minimal data', function () {
     $responseData = [
+        'id' => '0123456789abcdef',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
     ];
@@ -18,6 +19,7 @@ it('parses response with minimal data', function () {
     $dto = new ResultDto('A', 'B', $response);
 
     expect($dto->getHttpStatusCode())->toBe(200)
+        ->and($dto->getId())->toBe('0123456789abcdef')
         ->and($dto->getTimestamp())->toBe('2023-08-07T12:00:00Z')
         ->and($dto->getStatus())->toBe(Status::EVATR_0000)
         ->and($dto->getMessage())->toBe('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.')
@@ -29,23 +31,10 @@ it('parses response with minimal data', function () {
         ->and($dto->getDateTill())->toBeNull();
 });
 
-it('sets timestamp to null when missing', function () {
-    $responseData = [
-        // 'anfrageZeitpunkt' intentionally omitted
-        'status' => 'evatr-0000',
-    ];
-
-    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    $dto = new ResultDto('X', 'Y', $response);
-
-    expect($dto->getTimestamp())->toBeNull()
-        ->and($dto->getStatus())->toBe(Status::EVATR_0000)
-        ->and($dto->getMessage())->toBe('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
-});
-
 it('falls back to plain body for raw when headers cause json_encode to fail', function () {
     // valid body to pass JSON parsing
     $validBody = json_encode([
+        'id' => 'deadbeefdeadbeef',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
     ], JSON_THROW_ON_ERROR);
@@ -67,6 +56,7 @@ it('falls back to plain body for raw when headers cause json_encode to fail', fu
 
 it('parses response with full qualified data', function () {
     $responseData = [
+        'id' => '0123456789123456',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
         'ergFirmenname' => 'A',
@@ -81,6 +71,7 @@ it('parses response with full qualified data', function () {
     $dto = new ResultDto('X', 'Y', $response);
 
     expect($dto->getHttpStatusCode())->toBe(200)
+        ->and($dto->getId())->toBe('0123456789123456')
         ->and($dto->getTimestamp())->toBe('2023-08-07T12:00:00Z')
         ->and($dto->getStatus())->toBe(Status::EVATR_0000)
         ->and($dto->getCompany())->toBe(QualifiedResult::A)
@@ -95,6 +86,7 @@ it('parses response with full qualified data', function () {
 
 it('includes raw response when requested', function () {
     $responseData = [
+        'id' => 'cafebabecafebabe',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
     ];
@@ -118,6 +110,7 @@ it('includes raw response when requested', function () {
 
 it('does not include raw response when not requested', function () {
     $responseData = [
+        'id' => 'facefeedfacefeed',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
     ];
@@ -130,6 +123,7 @@ it('does not include raw response when not requested', function () {
 
 it('handles different status codes', function () {
     $responseData = [
+        'id' => '0f1e2d3c4b5a6978',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0004',
     ];
@@ -143,6 +137,7 @@ it('handles different status codes', function () {
 
 it('converts to array correctly', function () {
     $responseData = [
+        'id' => '0123456789abcdef',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
         'ergFirmenname' => 'A',
@@ -155,6 +150,7 @@ it('converts to array correctly', function () {
     $array = $dto->toArray();
 
     expect($array)->toBe([
+        'id' => '0123456789abcdef',
         'timestamp' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
         'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.',
@@ -179,16 +175,56 @@ it('throws when response body is invalid JSON', function () {
 it('throws when response body is an empty object', function () {
     $response = new Response(200, ['Content-Type' => 'application/json'], '{}');
     new ResultDto('A', 'B', $response);
-})->throws(ErrorResponse::class, 'Unexpected response format: missing status');
+})->throws(ErrorResponse::class, 'Unexpected response format: missing anfrageZeitpunkt');
 
 it('throws when content type is application/json but body is not an array', function () {
     // Body is valid JSON (boolean true) but not an array; should not throw and should result in empty parsed data
     $response = new Response(200, ['Content-Type' => 'application/json'], 'true');
     new ResultDto('A', 'B', $response);
+})->throws(ErrorResponse::class, 'Unexpected response format: missing anfrageZeitpunkt');
+
+it('throws when status key is missing', function () {
+    $responseData = [
+        'id' => 'abc123abc123abcd',
+        // status missing intentionally
+        'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
+    ];
+
+    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
+    new ResultDto('A', 'B', $response);
 })->throws(ErrorResponse::class, 'Unexpected response format: missing status');
+
+it('handles present but non-string timestamp gracefully', function () {
+    $responseData = [
+        'id' => '1122334455667788',
+        'anfrageZeitpunkt' => 1691400000,
+        'status' => 'evatr-0000',
+    ];
+
+    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
+    $dto = new ResultDto('X', 'Y', $response);
+
+    expect($dto->getTimestamp())->toBe('1691400000')
+        ->and($dto->getStatus())->toBe(Status::EVATR_0000);
+});
+
+it('handles present but non-string-non-integer timestamp by setting null', function () {
+    $responseData = [
+        'id' => '2233445566778899',
+        'anfrageZeitpunkt' => true,
+        'status' => 'evatr-0000',
+    ];
+
+    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
+    $dto = new ResultDto('X', 'Y', $response);
+
+    expect($dto->getTimestamp())->toBeNull()
+        ->and($dto->getStatus())->toBe(Status::EVATR_0000);
+});
 
 it('handles present but non-string status gracefully', function () {
     $responseData = [
+        'id' => '8899aabbccddeeff',
         'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
         'status' => 1234,
     ];

@@ -2,6 +2,17 @@
 
 All notable changes to `evatr` will be documented in this file.
 
+## v0.1.0 - 2025-08-13
+
+🚀 What’s in this Release:
+- 🆔 Added optional `id` field (introduced in api-docs v1.2.3.9 on 2025-08-13):
+    - Parse `id` (string|null) from API responses. 
+    - New getter `getId(): ?string`. 
+    - Include `id` in toArray() serialization output.
+- 💔 Renamed `checkAvailability()` to `getAvailability()`
+- 🛠️ Refactored request, throw ErrorResponse when `anfrageZeitpunkt` or `status` key is missing, passed PHPStan level 9, added unified error handling, increased test coverage, tackled TODOs in code, removed obsolete comments.
+- 📝 Updated documentation.
+
 ## v0.0.2 - 2025-08-09
 
 🚀 What’s in this Release:

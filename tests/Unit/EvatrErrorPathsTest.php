@@ -10,6 +10,37 @@ beforeEach(function () {
     $_ENV['APP_ENV'] = 'testing';
 });
 
+it('check throws ErrorResponse when anfrageZeitpunkt key is missing', function () {
+    $evatr = new Evatr(vatIdOwn: 'DE123456789', vatIdForeign: 'ATU12345678');
+
+    $mock = Mockery::mock(Client::class);
+    $mock->shouldReceive('post')
+        ->once()
+        ->with(Evatr::URL_VALIDATION, [
+            'json' => [
+                'anfragendeUstid' => 'DE123456789',
+                'angefragteUstid' => 'ATU12345678',
+            ],
+        ])
+        ->andReturn(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            // 'anfrageZeitpunkt' intentionally missing
+            'status' => 'evatr-0000',
+        ], JSON_THROW_ON_ERROR)));
+
+    $evatr->setHttpClient($mock);
+
+    try {
+        $evatr->check();
+        expect()->fail('Expected ErrorResponse to be thrown');
+    } catch (ErrorResponse $e) {
+        expect($e->getHttpCode())->toBe(200)
+            ->and($e->getError())->toBe('Unexpected response format: missing anfrageZeitpunkt')
+            ->and($e->getMeta())
+            ->toHaveKey('endpoint', Evatr::URL_VALIDATION)
+            ->toHaveKey('errorType', 'unexpected_response');
+    }
+});
+
 it('check throws ErrorResponse on invalid JSON', function () {
     $evatr = new Evatr(vatIdOwn: 'DE123456789', vatIdForeign: 'ATU12345678');
 
@@ -60,7 +91,7 @@ it('check throws ErrorResponse when status key is missing', function () {
         expect()->fail('Expected ErrorResponse to be thrown');
     } catch (ErrorResponse $e) {
         expect($e->getHttpCode())->toBe(200)
-            ->and($e->getError())->toBe('Unexpected response format: missing status')
+            ->and($e->getError())->toBe('Unexpected response format: missing anfrageZeitpunkt')
             ->and($e->getRaw())->toBe('{}')
             ->and($e->getMeta())
             ->toHaveKey('endpoint', Evatr::URL_VALIDATION)

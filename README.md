@@ -1,7 +1,7 @@
 ![Recht logisch eVatR banner image](rechtlogisch-evatr-banner.png)
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rechtlogisch/evatr.svg?style=flat-square)](https://packagist.org/packages/rechtlogisch/evatr)
-[![Tests](https://img.shields.io/github/actions/workflow/status/rechtlogisch/evatr/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/rechtlogisch/evatr/actions/workflows/run-tests.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/rechtlogisch/evatr-php/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/rechtlogisch/evatr-php/actions/workflows/run-tests.yml)
 [![codecov](https://codecov.io/github/rechtlogisch/evatr-php/graph/badge.svg?token=)](https://codecov.io/github/rechtlogisch/evatr-php)
 [![Total Downloads](https://img.shields.io/packagist/dt/rechtlogisch/evatr.svg?style=flat-square)](https://packagist.org/packages/rechtlogisch/evatr)
 
@@ -147,6 +147,7 @@ The `check()` method returns a `ResultDto` object with the following methods:
 ```php
 $result->getVatIdOwn(): string;         // Own VAT-ID which was used for the request
 $result->getVatIdForeign(): string;     // Foreign VAT-ID which was checked
+$result->getId(): string;              // Unique ID from API, related to request
 $result->getHttpStatusCode(): ?int;     // HTTP status code
 $result->getTimestamp(): ?string;       // Query timestamp (ISO-8601 string)
 $result->getStatus(): ?Status;          // Status enum
@@ -241,6 +242,7 @@ The API uses German terms, which have been mapped to parameters:
 
 | BZSt API          | evatr          |
 |-------------------|----------------|
+| id                | id             |
 | anfrageZeitpunkt  | timestamp      |
 | gueltigAb         | dateFrom       |
 | gueltigBis        | dateTill       |
