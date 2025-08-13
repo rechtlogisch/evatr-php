@@ -38,7 +38,6 @@ function expectOk(
     ResultDto $result,
 ): void {
     expectResult($result);
-    /** @noinspection PhpUnhandledExceptionInspection */
     expectValidTimestamp($result->getTimestamp());
 }
 

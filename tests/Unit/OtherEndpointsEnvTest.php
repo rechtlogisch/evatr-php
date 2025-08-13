@@ -4,22 +4,9 @@ declare(strict_types=1);
 
 use GuzzleHttp\Client;
 use Rechtlogisch\Evatr\Evatr;
+use Rechtlogisch\Evatr\Exception\InputError;
 
 it('rejects injected client for getStatusMessages outside testing env', function () {
-    $prev = $_ENV['APP_ENV'] ?? null;
-    unset($_ENV['APP_ENV']); // default to production
-
-    try {
-        expect(function () {
-            /** @noinspection PhpUnhandledExceptionInspection */
-            return Evatr::getStatusMessages(new Client(['http_errors' => false]));
-        })->toThrow(RuntimeException::class);
-    } finally {
-        if ($prev === null) {
-            /** @noinspection PhpConditionAlreadyCheckedInspection */
-            unset($_ENV['APP_ENV']);
-        } else {
-            $_ENV['APP_ENV'] = $prev;
-        }
-    }
-});
+    unset($_ENV['APP_ENV']);
+    Evatr::getStatusMessages(new Client(['http_errors' => false]));
+})->throws(InputError::class, 'Setting a custom HTTP client is only allowed in a testing environment.');

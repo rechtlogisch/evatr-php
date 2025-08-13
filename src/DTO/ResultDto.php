@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Rechtlogisch\Evatr\DTO;
 
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Rechtlogisch\Evatr\Enum\QualifiedResult;
 use Rechtlogisch\Evatr\Enum\Status;
+use Rechtlogisch\Evatr\Evatr;
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
+use RuntimeException;
 use Throwable;
 
 final class ResultDto
@@ -36,29 +40,69 @@ final class ResultDto
     public function __construct(
         private readonly string $vatIdOwn,
         private readonly string $vatIdForeign,
-        private readonly ?ResponseInterface $response = null,
+        private readonly ResponseInterface $response,
         bool $includeRaw = false,
     ) {
-        $body = $this->response?->getBody()->getContents();
-        // @TODO: handle exceptions and errors properly
-        /** @noinspection PhpUnhandledExceptionInspection */
-        $data = $body ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
+        $body = $this->response->getBody()->getContents();
+        $this->response->getBody()->rewind();
 
-        $this->timestamp = $data['anfrageZeitpunkt'] ?? null;
-        $this->status = isset($data['status']) ? Status::from($data['status']) : null;
+        try {
+            /** @var array<mixed> $data */
+            $data = ! empty($body) ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
+        } catch (JsonException $e) {
+            throw new ErrorResponse(
+                httpCode: $this->response->getStatusCode(),
+                error: 'Invalid JSON response',
+                exception: $e,
+                raw: $body,
+                meta: [
+                    'endpoint' => Evatr::URL_VALIDATION,
+                    'errorType' => 'invalid_json',
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }
+
+        if (empty($data) || ! isset($data['status'])) {
+            throw new ErrorResponse(
+                httpCode: $this->response->getStatusCode(),
+                error: 'Unexpected response format: missing status',
+                exception: new RuntimeException('Unexpected response format: missing status'),
+                raw: $this->response->getBody()->getContents(),
+                meta: [
+                    'endpoint' => Evatr::URL_VALIDATION,
+                    'errorType' => 'unexpected_response',
+                ]
+            );
+        }
+
+        $this->timestamp = isset($data['anfrageZeitpunkt']) && is_string($data['anfrageZeitpunkt'])
+            ? $data['anfrageZeitpunkt']
+            : null;
+        $this->status = is_string($data['status'])
+            ? Status::from($data['status'])
+            : null;
         if (isset($this->status)) {
             $this->message = $this->status->description();
         }
-        $this->company = isset($data['ergFirmenname']) ? QualifiedResult::from($data['ergFirmenname']) : null;
-        $this->street = isset($data['ergStrasse']) ? QualifiedResult::from($data['ergStrasse']) : null;
-        $this->zip = isset($data['ergPlz']) ? QualifiedResult::from($data['ergPlz']) : null;
-        $this->location = isset($data['ergOrt']) ? QualifiedResult::from($data['ergOrt']) : null;
-        $this->dateFrom = $data['gueltigAb'] ?? null;
-        $this->dateTill = $data['gueltigBis'] ?? null;
+        $this->company = isset($data['ergFirmenname']) && is_string($data['ergFirmenname'])
+            ? QualifiedResult::from($data['ergFirmenname'])
+            : null;
+        $this->street = isset($data['ergStrasse']) && is_string($data['ergStrasse'])
+            ? QualifiedResult::from($data['ergStrasse'])
+            : null;
+        $this->zip = isset($data['ergPlz']) && is_string($data['ergPlz'])
+            ? QualifiedResult::from($data['ergPlz'])
+            : null;
+        $this->location = isset($data['ergOrt']) && is_string($data['ergOrt'])
+            ? QualifiedResult::from($data['ergOrt'])
+            : null;
+        $this->dateFrom = isset($data['gueltigAb']) && is_string($data['gueltigAb']) ? $data['gueltigAb'] : null;
+        $this->dateTill = isset($data['gueltigBis']) && is_string($data['gueltigBis']) ? $data['gueltigBis'] : null;
 
-        $this->setHttpStatusCode($this->response?->getStatusCode());
+        $this->setHttpStatusCode($this->response->getStatusCode());
 
-        if ($includeRaw) {
+        if ($includeRaw === true) {
             $this->setRaw($this->response);
         }
     }
@@ -82,12 +126,9 @@ final class ResultDto
                 'headers' => $headers,
                 'data' => $body,
             ], JSON_THROW_ON_ERROR);
-            // @codeCoverageIgnoreStart
-            // @TODO: add tests where: 1. body is html, 2. body is empty
         } catch (Throwable) {
             $this->raw = $body;
         }
-        // @codeCoverageIgnoreEnd
     }
 
     public function getHttpStatusCode(): ?int
@@ -115,9 +156,9 @@ final class ResultDto
         return $this->status;
     }
 
-    public function getMessage(): ?Status
+    public function getMessage(): ?string
     {
-        return $this->status;
+        return $this->message;
     }
 
     public function getCompany(): ?QualifiedResult

@@ -15,7 +15,6 @@ it('can fetch status messages', function () {
         ->with(Evatr::URL_STATUS_MESSAGES)
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], $apiResponse));
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $messages = Evatr::getStatusMessages($mock);
 
     expect($messages)->toBeArray()->not->toBeEmpty();
@@ -27,7 +26,6 @@ it('can fetch status messages', function () {
 
 it('can fetch EU member states availability as map', function () {
     $_ENV['APP_ENV'] = 'testing';
-    /** @noinspection PhpUnhandledExceptionInspection */
     $apiResponse = json_encode([
         ['alpha2' => 'DE', 'name' => 'Germany', 'verfuegbar' => true],
         ['alpha2' => 'AT', 'name' => 'Austria', 'verfuegbar' => false],
@@ -39,8 +37,7 @@ it('can fetch EU member states availability as map', function () {
         ->with(Evatr::URL_EU_MEMBER_STATES)
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], $apiResponse));
 
-    /** @noinspection PhpUnhandledExceptionInspection */
-    $states = Evatr::checkAvailability(false, $mock);
+    $states = Evatr::getAvailability(false, $mock);
 
     expect($states)->toBeArray()->toHaveCount(2)
         ->and($states['DE'])->toBeTrue()
@@ -49,7 +46,6 @@ it('can fetch EU member states availability as map', function () {
 
 it('can fetch only not available EU member states', function () {
     $_ENV['APP_ENV'] = 'testing';
-    /** @noinspection PhpUnhandledExceptionInspection */
     $apiResponse = json_encode([
         ['alpha2' => 'DE', 'name' => 'Germany', 'verfuegbar' => true],
         ['alpha2' => 'AT', 'name' => 'Austria', 'verfuegbar' => false],
@@ -62,8 +58,7 @@ it('can fetch only not available EU member states', function () {
         ->with(Evatr::URL_EU_MEMBER_STATES)
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], $apiResponse));
 
-    /** @noinspection PhpUnhandledExceptionInspection */
-    $states = Evatr::checkAvailability(true, $mock);
+    $states = Evatr::getAvailability(true, $mock);
 
     expect($states)->toBeArray()->toHaveCount(2)
         ->and(array_keys($states))->toEqualCanonicalizing(['AT', 'FR'])

@@ -47,7 +47,7 @@ or alternatively use the helper function:
 $result = checkVatId(vatIdOwn: 'DE123456789', vatIdForeign: 'ATU12345678');
 ```
 
-### Qualified Validation
+### Qualified Confirmation
 
 Validates VAT-ID and verifies company data:
 
@@ -55,12 +55,12 @@ Validates VAT-ID and verifies company data:
 use Rechtlogisch\Evatr\Evatr;
 
 $result = (new Evatr(
-  vatIdOwn: 'DE123456789',     // Your German VAT-ID (required)
-  vatIdForeign: 'ATU12345678', // VAT-ID to validate (required)
-  company: 'Test GmbH',        // Company name (required for qualified validation)
-  location: 'Wien',            // City (required for qualified validation)
-  street: 'Musterstr. 1',      // Street address (optional)
-  zip: '1010',                 // Postal code (optional)
+  vatIdOwn: 'DE123456789',            // Your German VAT-ID (required)
+  vatIdForeign: 'ATU12345678',        // VAT-ID to validate (required)
+  company: 'Musterhaus GmbH & Co KG', // Company name (required for qualified confirmation)
+  location: 'musterort',              // City (required for qualified confirmation)
+  street: 'Musterstrasse 22',         // Street address (optional)
+  zip: '12345',                       // Postal code (optional)
 ))->check();
 ```
 
@@ -70,10 +70,10 @@ or alternatively use the helper function:
 $result = confirmVatId(
   vatIdOwn: 'DE123456789',
   vatIdForeign: 'ATU12345678',
-  company: 'Test GmbH',
-  street: 'Musterstr. 1',
-  zip: '1010',
-  location: 'Wien',
+  company: 'Musterhaus GmbH & Co KG',
+  street: 'Musterstrasse 22',
+  zip: '12345',
+  location: 'musterort',
 );
 ```
 
@@ -103,9 +103,9 @@ $result = checkVatId(
 ```php
 $evatr = new Evatr(
   vatIdOwn: string,      // Your German VAT-ID (required)
-  vatIdForeign: string,  // VAT-ID to validate (required)
-  company: ?string,      // Company name (optional, required for qualified validation)
-  location: ?string,     // City (optional, required for qualified validation)
+  vatIdForeign: string,  // VAT-ID to confirm (required)
+  company: ?string,      // Company name (optional, required for qualified confirmation)
+  location: ?string,     // City (optional, required for qualified confirmation)
   street: ?string,       // Street address (optional)
   zip: ?string,          // Postal code (optional)
 );
@@ -126,7 +126,7 @@ $evatr = new Evatr($request);
 
 #### check(): ResultDto
 
-Performs the VAT-ID validation:
+Performs the VAT-ID confirmation:
 
 ```php
 $result = $evatr->check();
@@ -146,11 +146,11 @@ The `check()` method returns a `ResultDto` object with the following methods:
 
 ```php
 $result->getVatIdOwn(): string;         // Own VAT-ID which was used for the request
-$result->getVatIdForeign(): string;     // Foreign VAT-ID which was validated
+$result->getVatIdForeign(): string;     // Foreign VAT-ID which was checked
 $result->getHttpStatusCode(): ?int;     // HTTP status code
 $result->getTimestamp(): ?string;       // Query timestamp (ISO-8601 string)
 $result->getStatus(): ?Status;          // Status enum
-$result->getMessage(): ?Status;         // Status enum (alias to `getStatus()`)
+$result->getMessage(): ?string;         // Human-readable message based on EVATR_LANG
 $result->getDateFrom(): ?string;        // Valid from date
 $result->getDateTill(): ?string;        // Valid until date
 $result->getCompany(): ?QualifiedResult;   // Company validation result
@@ -177,9 +177,9 @@ if ($result->getStatus() === Status::EVATR_0000) {
 $description = $result->getStatus()->description();
 ```
 
-### Validation Results (Qualified Validation)
+### Validation Results (Qualified Confirmation)
 
-For qualified validation, the response includes validation results for each field via the `QualifiedResult` enum:
+For qualified confirmations, the response includes validation results for each field via the `QualifiedResult` enum:
 
 - **A** - Data matches registered information
 - **B** - Data does not match registered information  
@@ -296,31 +296,58 @@ $statusMessage = new StatusMessage(
 #### EU member states availability
 
 ```php
-$states = Evatr::checkAvailability(); // array<string,bool> map of code => available
+$states = Evatr::getAvailability(); // array<string,bool> map of code => available
 // Example: [ 'DE' => true, 'AT' => false, ... ]
 
 // Only not available:
-$notAvailable = Evatr::checkAvailability(onlyNotAvailable: true); // [ 'AT' => false, ... ]
+$notAvailable = Evatr::getAvailability(onlyNotAvailable: true); // [ 'AT' => false, ... ]
 ```
 
 ## Error Handling
 
-The library handles various error scenarios:
+All public API methods throw exceptions on failure, and return only DTOs on success.
+
+- ErrorResponse: thrown for transport, server, or JSON/response parsing errors.
+- InputError: thrown when the error is caused by invalid input, and can be potentially fixed by the user.
 
 ```php
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
+use Rechtlogisch\Evatr\Exception\InputError;
+use Rechtlogisch\Evatr\Enum\Status;
+
 try {
-    $result = checkVatId('DE123456789', 'INVALID');
-    
-    // Check for specific error statuses
-    if ($result->getStatus() === Status::EVATR_0005) {
-        echo 'Invalid VAT-ID format: ' . $result->getStatus()->description();
-    }
-} catch (JsonException $e) {
-    // Handle JSON parsing errors
-    echo 'Invalid API response: ' . $e->getMessage();
-} catch (RuntimeException $e) {
-    // Handle other runtime errors
-    echo 'Error: ' . $e->getMessage();
+    $result = checkVatId('DE123456789', 'ATU12345678');
+    // handle result
+} catch (InputError|ErrorResponse $e) {
+    // Log/handle error: $e->getMessage()
+    // Get original exception: $e->getException()
+}
+```
+
+### ErrorResponse exception
+
+Thrown when a request fails due to transport or response parsing issues.
+
+Fields:
+- httpCode: int HTTP status or 0 for client-side failures
+- error: string short description
+- exception: Throwable the underlying/previous exception; if no underlying Throwable existed, a RuntimeException is used
+- raw: ?string raw response body if available
+- meta: array<string,mixed> additional context (e.g., endpoint, errorType)
+
+Example:
+```php
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
+
+try {
+    $result = checkVatId('DE123456789', 'ATU12345678');
+} catch (ErrorResponse $e) {
+    $code = $e->getHttpCode();
+    $msg  = $e->getError();
+    $previous = $e->getException(); // underlying Throwable (e.g., JsonException, GuzzleException, or RuntimeException)
+    $raw  = $e->getRaw();   // may be null
+    $meta = $e->getMeta();  // ['endpoint' => ..., 'errorType' => ...]
+    // Handle/log accordingly
 }
 ```
 
@@ -343,7 +370,7 @@ $testRequest = [
   'vatIdForeign' => 'ATU12345678',
 ];
 
-// Qualified validation test
+// Qualified confirmation test
 $qualifiedTestRequest = [
   'vatIdOwn' => 'DE123456789',
   'vatIdForeign' => 'ATU12345678',

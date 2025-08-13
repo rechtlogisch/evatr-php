@@ -16,9 +16,12 @@ final readonly class EUMemberState
      */
     public static function fromArray(array $data): self
     {
+        $code = isset($data['alpha2']) && is_string($data['alpha2']) ? $data['alpha2'] : '';
+        $available = isset($data['verfuegbar']) && $data['verfuegbar'] === true;
+
         return new self(
-            code: (string) ($data['alpha2'] ?? ''),
-            available: (bool) ($data['verfuegbar'] ?? false),
+            code: $code,
+            available: $available,
         );
     }
 }
