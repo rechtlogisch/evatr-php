@@ -24,8 +24,7 @@ final class StatusMessages
         'evatr-0007' => ['category' => 'Hinweis', 'httpCode' => 403, 'field' => null, 'message' => 'Fehlerhafter Aufruf.'],
         'evatr-0008' => ['category' => 'Hinweis', 'httpCode' => 403, 'field' => null, 'message' => 'Die maximale Anzahl von qualifizierten Bestätigungsabfragen für diese Session wurde erreicht. Bitte starten Sie erneut mit einer einfachen Bestätigungsabfrage.'],
         'evatr-0011' => ['category' => 'Fehler', 'httpCode' => 503, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
-        // typo in message: is "angefrage", should be "angefragte"
-        'evatr-0012' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'angefragteUstid', 'message' => 'Die angefrage USt-IdNr. ist syntaktisch falsch. Sie passt nicht in das Erzeugungsschema.'],
+        'evatr-0012' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'angefragteUstid', 'message' => 'Die angefragte USt-IdNr. ist syntaktisch falsch. Sie passt nicht in das Erzeugungsschema.'],
         'evatr-0013' => ['category' => 'Fehler', 'httpCode' => 503, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
         'evatr-1001' => ['category' => 'Fehler', 'httpCode' => 503, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
         'evatr-1002' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
@@ -38,6 +37,7 @@ final class StatusMessages
         'evatr-2005' => ['category' => 'Fehler', 'httpCode' => 404, 'field' => 'anfragendeUstid', 'message' => 'Die angegebene eigene DE Ust-IdNr. ist zum Anfragezeitpunkt nicht gültig.'],
         'evatr-2006' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => 'angefragteUstid', 'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt nicht gültig. Sie war gültig im Zeitraum, der durch die Werte in den Feldern gueltigAb und gueltigBis beschrieben ist.'],
         'evatr-2007' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Bei der Verarbeitung der Daten aus dem angefragten EU-Mitgliedstaat ist ein Fehler aufgetreten. Ihre Anfrage kann deshalb nicht bearbeitet werden.'],
+        // typo in official statusmeldungen.json: ... liegt einer Besonderheit vor ... instead of ... liegt eine Besonderheit vor ...
         'evatr-2008' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => null, 'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig. Für die qualifizierte Bestätigungsanfrage liegt einer Besonderheit vor. Für Rückfragen wenden Sie sich an das BZSt.'],
         'evatr-2011' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
         'evatr-3011' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
