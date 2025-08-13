@@ -40,7 +40,7 @@ it('getStatusMessages skips entries without status key', function () {
         ->and($messages['evatr-0000'])->toBeInstanceOf(StatusMessage::class);
 });
 
-it('checkAvailability skips entries without valid alpha2', function () {
+it('getAvailability skips entries without valid alpha2', function () {
     $apiResponse = json_encode([
         ['alpha2' => 'DE', 'name' => 'Germany', 'verfuegbar' => true],
         ['alpha2' => 123, 'name' => 'Broken', 'verfuegbar' => false], // invalid type, should be skipped
@@ -54,7 +54,7 @@ it('checkAvailability skips entries without valid alpha2', function () {
         ->with(Evatr::URL_EU_MEMBER_STATES)
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], $apiResponse));
 
-    $states = Evatr::checkAvailability(false, $mock);
+    $states = Evatr::getAvailability(false, $mock);
 
     expect($states)->toBeArray()->toHaveCount(2)
         ->and(array_keys($states))->toEqualCanonicalizing(['DE', 'AT'])

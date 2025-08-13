@@ -296,11 +296,11 @@ $statusMessage = new StatusMessage(
 #### EU member states availability
 
 ```php
-$states = Evatr::checkAvailability(); // array<string,bool> map of code => available
+$states = Evatr::getAvailability(); // array<string,bool> map of code => available
 // Example: [ 'DE' => true, 'AT' => false, ... ]
 
 // Only not available:
-$notAvailable = Evatr::checkAvailability(onlyNotAvailable: true); // [ 'AT' => false, ... ]
+$notAvailable = Evatr::getAvailability(onlyNotAvailable: true); // [ 'AT' => false, ... ]
 ```
 
 ## Error Handling

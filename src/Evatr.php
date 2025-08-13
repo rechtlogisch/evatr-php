@@ -222,7 +222,7 @@ class Evatr
      *
      * @throws ErrorResponse on transport/JSON failures
      */
-    public static function checkAvailability(bool $onlyNotAvailable = false, ?Client $testClient = null): array
+    public static function getAvailability(bool $onlyNotAvailable = false, ?Client $testClient = null): array
     {
         try {
             $client = self::decideHttpClient($testClient);

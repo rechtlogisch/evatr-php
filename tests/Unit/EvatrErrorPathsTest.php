@@ -139,7 +139,7 @@ it('getStatusMessages throws ErrorResponse on network exception', function () {
     }
 });
 
-it('checkAvailability throws ErrorResponse on invalid JSON', function () {
+it('getAvailability throws ErrorResponse on invalid JSON', function () {
     $mock = Mockery::mock(Client::class);
     $mock->shouldReceive('get')
         ->once()
@@ -147,7 +147,7 @@ it('checkAvailability throws ErrorResponse on invalid JSON', function () {
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], 'oops'));
 
     try {
-        Evatr::checkAvailability(false, $mock);
+        Evatr::getAvailability(false, $mock);
         expect()->fail('Expected ErrorResponse to be thrown');
     } catch (ErrorResponse $e) {
         expect($e->getHttpCode())->toBe(200)
@@ -159,7 +159,7 @@ it('checkAvailability throws ErrorResponse on invalid JSON', function () {
     }
 });
 
-it('checkAvailability throws ErrorResponse on network exception', function () {
+it('getAvailability throws ErrorResponse on network exception', function () {
     $mock = Mockery::mock(Client::class);
     $exception = new class('Timeout') extends Exception implements GuzzleException {};
     $mock->shouldReceive('get')
@@ -168,7 +168,7 @@ it('checkAvailability throws ErrorResponse on network exception', function () {
         ->andThrow($exception);
 
     try {
-        Evatr::checkAvailability(false, $mock);
+        Evatr::getAvailability(false, $mock);
         expect()->fail('Expected ErrorResponse to be thrown');
     } catch (ErrorResponse $e) {
         expect($e->getHttpCode())->toBe(0)

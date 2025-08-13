@@ -37,7 +37,7 @@ it('can fetch EU member states availability as map', function () {
         ->with(Evatr::URL_EU_MEMBER_STATES)
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], $apiResponse));
 
-    $states = Evatr::checkAvailability(false, $mock);
+    $states = Evatr::getAvailability(false, $mock);
 
     expect($states)->toBeArray()->toHaveCount(2)
         ->and($states['DE'])->toBeTrue()
@@ -58,7 +58,7 @@ it('can fetch only not available EU member states', function () {
         ->with(Evatr::URL_EU_MEMBER_STATES)
         ->andReturn(new Response(200, ['Content-Type' => 'application/json'], $apiResponse));
 
-    $states = Evatr::checkAvailability(true, $mock);
+    $states = Evatr::getAvailability(true, $mock);
 
     expect($states)->toBeArray()->toHaveCount(2)
         ->and(array_keys($states))->toEqualCanonicalizing(['AT', 'FR'])
