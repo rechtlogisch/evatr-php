@@ -190,10 +190,10 @@ it('sends a qualified request with includeRaw and validates raw structure with p
         ->toMatch('/^[a-f0-9]{16}$/')
         ->and($data['anfrageZeitpunkt'])
         ->toBeString()
-        ->toMatch('/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{9}\+0[1|2]:00$/')
+        ->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{9}\+0[1|2]:00$/')
         ->and($data['status'])
         ->toBeString()
-        ->toMatch('/^evatr-\\d{4}$/i');
+        ->toMatch('/^evatr-\d{4}$/i');
 
     foreach (['ergFirmenname', 'ergStrasse', 'ergPlz', 'ergOrt'] as $field) {
         expect($data[$field])
@@ -205,7 +205,7 @@ it('sends a qualified request with includeRaw and validates raw structure with p
         if (array_key_exists($field, $data) && $data[$field] !== null) {
             expect($data[$field])
                 ->toBeString()
-                ->toMatch('/^\\d{4}-\\d{2}-\\d{2}$/');
+                ->toMatch('/^\d{4}-\d{2}-\d{2}$/');
         }
     }
 })->group('external');
