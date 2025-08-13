@@ -82,11 +82,15 @@ final class StatusMessages
      */
     private static function data(): array
     {
-        $lang = strtolower((string) ($_ENV['EVATR_LANG'] ?? 'de'));
+        $langValue = $_ENV['EVATR_LANG'] ?? 'de';
+        $lang = is_string($langValue) ? strtolower($langValue) : 'de';
 
         return $lang === 'en' ? self::MESSAGES_EN : self::MESSAGES_DE;
     }
 
+    /**
+     * @return array{category: ?string, httpCode: ?int, field: ?string, message: string}|null
+     */
     public static function forCode(string $code): ?array
     {
         $data = self::data();
@@ -96,11 +100,15 @@ final class StatusMessages
 
     public static function httpCodeFor(string $code): ?int
     {
-        return self::forCode($code)['httpCode'] ?? null;
+        $item = self::forCode($code);
+
+        return $item['httpCode'] ?? null;
     }
 
     public static function messageFor(string $code): ?string
     {
-        return self::forCode($code)['message'] ?? null;
+        $item = self::forCode($code);
+
+        return $item['message'] ?? null;
     }
 }

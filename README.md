@@ -150,7 +150,7 @@ $result->getVatIdForeign(): string;     // Foreign VAT-ID which was validated
 $result->getHttpStatusCode(): ?int;     // HTTP status code
 $result->getTimestamp(): ?string;       // Query timestamp (ISO-8601 string)
 $result->getStatus(): ?Status;          // Status enum
-$result->getMessage(): ?Status;         // Status enum (alias to `getStatus()`)
+$result->getMessage(): ?string;         // Human-readable message based on EVATR_LANG
 $result->getDateFrom(): ?string;        // Valid from date
 $result->getDateTill(): ?string;        // Valid until date
 $result->getCompany(): ?QualifiedResult;   // Company validation result
@@ -305,22 +305,49 @@ $notAvailable = Evatr::checkAvailability(onlyNotAvailable: true); // [ 'AT' => f
 
 ## Error Handling
 
-The library handles various error scenarios:
+All public API methods throw exceptions on failure, and return only DTOs on success.
+
+- ErrorResponse: thrown for transport, server, or JSON/response parsing errors.
+- InputError: thrown when the error is caused by invalid input, and can be potentially fixed by the user.
 
 ```php
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
+use Rechtlogisch\Evatr\Exception\InputError;
+use Rechtlogisch\Evatr\Enum\Status;
+
 try {
-    $result = checkVatId('DE123456789', 'INVALID');
-    
-    // Check for specific error statuses
-    if ($result->getStatus() === Status::EVATR_0005) {
-        echo 'Invalid VAT-ID format: ' . $result->getStatus()->description();
-    }
-} catch (JsonException $e) {
-    // Handle JSON parsing errors
-    echo 'Invalid API response: ' . $e->getMessage();
-} catch (RuntimeException $e) {
-    // Handle other runtime errors
-    echo 'Error: ' . $e->getMessage();
+    $result = checkVatId('DE123456789', 'ATU12345678');
+    // handle result
+} catch (InputError|ErrorResponse $e) {
+    // Log/handle error: $e->getMessage()
+    // Get original exception: $e->getException()
+}
+```
+
+### ErrorResponse exception
+
+Thrown when a request fails due to transport or response parsing issues.
+
+Fields:
+- httpCode: int HTTP status or 0 for client-side failures
+- error: string short description
+- exception: Throwable the underlying/previous exception; if no underlying Throwable existed, a RuntimeException is used
+- raw: ?string raw response body if available
+- meta: array<string,mixed> additional context (e.g., endpoint, errorType)
+
+Example:
+```php
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
+
+try {
+    $result = checkVatId('DE123456789', 'ATU12345678');
+} catch (ErrorResponse $e) {
+    $code = $e->getHttpCode();
+    $msg  = $e->getError();
+    $previous = $e->getException(); // underlying Throwable (e.g., JsonException, GuzzleException, or RuntimeException)
+    $raw  = $e->getRaw();   // may be null
+    $meta = $e->getMeta();  // ['endpoint' => ..., 'errorType' => ...]
+    // Handle/log accordingly
 }
 ```
 

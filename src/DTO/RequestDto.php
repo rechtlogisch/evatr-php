@@ -34,12 +34,12 @@ final class RequestDto
 
     public function getVatIdOwn(): string
     {
-        return $this->vatIdOwn;
+        return $this->vatIdOwn ?? '';
     }
 
     public function getVatIdForeign(): string
     {
-        return $this->vatIdForeign;
+        return $this->vatIdForeign ?? '';
     }
 
     /**

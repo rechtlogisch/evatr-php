@@ -19,7 +19,7 @@ final readonly class StatusMessage
      */
     public static function fromArray(array $data): self
     {
-        $rawCategory = isset($data['kategorie']) ? (string) $data['kategorie'] : null;
+        $rawCategory = isset($data['kategorie']) && is_string($data['kategorie']) ? $data['kategorie'] : null;
 
         // Normalize category to English invariant values: Result, Error, Hint
         $category = match ($rawCategory) {
@@ -29,12 +29,17 @@ final readonly class StatusMessage
             default => null,
         };
 
+        $status = isset($data['status']) && is_string($data['status']) ? $data['status'] : '';
+        $http = isset($data['httpcode']) && is_int($data['httpcode']) ? $data['httpcode'] : null;
+        $field = isset($data['feld']) && is_string($data['feld']) ? $data['feld'] : null;
+        $message = isset($data['meldung']) && is_string($data['meldung']) ? $data['meldung'] : '';
+
         return new self(
-            status: (string) ($data['status'] ?? ''),
+            status: $status,
             category: $category,
-            http: isset($data['httpcode']) ? (int) $data['httpcode'] : null,
-            field: isset($data['feld']) ? (string) $data['feld'] : null,
-            message: (string) ($data['meldung'] ?? ''),
+            http: $http,
+            field: $field,
+            message: $message,
         );
     }
 }

@@ -5,6 +5,7 @@ use GuzzleHttp\Psr7\Response;
 use Rechtlogisch\Evatr\DTO\RequestDto;
 use Rechtlogisch\Evatr\DTO\ResultDto;
 use Rechtlogisch\Evatr\Evatr;
+use Rechtlogisch\Evatr\Exception\InputError;
 
 beforeEach(function () {
     $_ENV['APP_ENV'] = 'testing';
@@ -72,9 +73,8 @@ it('throws exception when setting HTTP client in non-testing environment', funct
 
     $mockClient = Mockery::mock(Client::class);
 
-    expect(fn () => $evatr->setHttpClient($mockClient))
-        ->toThrow(RuntimeException::class, 'Setting a custom HTTP client is only allowed in a testing environment.');
-});
+    $evatr->setHttpClient($mockClient);
+})->throws(InputError::class, 'Setting a custom HTTP client is only allowed in a testing environment.');
 
 it('can enable includeRaw option', function () {
     $evatr = new Evatr(
@@ -129,7 +129,6 @@ it('can perform check with mocked client', function () {
         );
 
     $evatr->setHttpClient($mockClient);
-    /** @noinspection PhpUnhandledExceptionInspection */
     $result = $evatr->check();
 
     expect($result)->toBeInstanceOf(ResultDto::class);
@@ -163,7 +162,6 @@ it('can perform check with qualified parameters', function () {
         );
 
     $evatr->setHttpClient($mockClient);
-    /** @noinspection PhpUnhandledExceptionInspection */
     $result = $evatr->check();
 
     expect($result)->toBeInstanceOf(ResultDto::class);
@@ -194,7 +192,6 @@ it('method chaining works correctly', function () {
             new Response(200, ['Content-Type' => 'application/json'], fixture('response-simple-ok.json'))
         );
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $result = $evatr
         ->setHttpClient($mockClient)
         ->includeRaw()

@@ -1,6 +1,6 @@
 {
     "name": "rechtlogisch/evatr",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Checks a VAT-ID using the eVatR REST-API of the German Federal Central Tax Office (Bundeszentralamt für Steuern, BZSt)",
     "keywords": [
         "rechtlogisch",

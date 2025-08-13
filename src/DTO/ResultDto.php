@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rechtlogisch\Evatr\DTO;
 
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Rechtlogisch\Evatr\Enum\QualifiedResult;
 use Rechtlogisch\Evatr\Enum\Status;
@@ -33,6 +34,9 @@ final class ResultDto
 
     private ?string $raw = null;
 
+    /**
+     * @throws JsonException
+     */
     public function __construct(
         private readonly string $vatIdOwn,
         private readonly string $vatIdForeign,
@@ -40,25 +44,38 @@ final class ResultDto
         bool $includeRaw = false,
     ) {
         $body = $this->response?->getBody()->getContents();
-        // @TODO: handle exceptions and errors properly
-        /** @noinspection PhpUnhandledExceptionInspection */
         $data = $body ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
+        if (! is_array($data)) {
+            $data = [];
+        }
 
-        $this->timestamp = $data['anfrageZeitpunkt'] ?? null;
-        $this->status = isset($data['status']) ? Status::from($data['status']) : null;
+        $this->timestamp = isset($data['anfrageZeitpunkt']) && is_string($data['anfrageZeitpunkt'])
+            ? $data['anfrageZeitpunkt']
+            : null;
+        $this->status = isset($data['status']) && is_string($data['status'])
+            ? Status::from($data['status'])
+            : null;
         if (isset($this->status)) {
             $this->message = $this->status->description();
         }
-        $this->company = isset($data['ergFirmenname']) ? QualifiedResult::from($data['ergFirmenname']) : null;
-        $this->street = isset($data['ergStrasse']) ? QualifiedResult::from($data['ergStrasse']) : null;
-        $this->zip = isset($data['ergPlz']) ? QualifiedResult::from($data['ergPlz']) : null;
-        $this->location = isset($data['ergOrt']) ? QualifiedResult::from($data['ergOrt']) : null;
-        $this->dateFrom = $data['gueltigAb'] ?? null;
-        $this->dateTill = $data['gueltigBis'] ?? null;
+        $this->company = isset($data['ergFirmenname']) && is_string($data['ergFirmenname'])
+            ? QualifiedResult::from($data['ergFirmenname'])
+            : null;
+        $this->street = isset($data['ergStrasse']) && is_string($data['ergStrasse'])
+            ? QualifiedResult::from($data['ergStrasse'])
+            : null;
+        $this->zip = isset($data['ergPlz']) && is_string($data['ergPlz'])
+            ? QualifiedResult::from($data['ergPlz'])
+            : null;
+        $this->location = isset($data['ergOrt']) && is_string($data['ergOrt'])
+            ? QualifiedResult::from($data['ergOrt'])
+            : null;
+        $this->dateFrom = isset($data['gueltigAb']) && is_string($data['gueltigAb']) ? $data['gueltigAb'] : null;
+        $this->dateTill = isset($data['gueltigBis']) && is_string($data['gueltigBis']) ? $data['gueltigBis'] : null;
 
         $this->setHttpStatusCode($this->response?->getStatusCode());
 
-        if ($includeRaw) {
+        if ($includeRaw && $this->response !== null) {
             $this->setRaw($this->response);
         }
     }
@@ -82,12 +99,9 @@ final class ResultDto
                 'headers' => $headers,
                 'data' => $body,
             ], JSON_THROW_ON_ERROR);
-            // @codeCoverageIgnoreStart
-            // @TODO: add tests where: 1. body is html, 2. body is empty
         } catch (Throwable) {
             $this->raw = $body;
         }
-        // @codeCoverageIgnoreEnd
     }
 
     public function getHttpStatusCode(): ?int
@@ -115,9 +129,9 @@ final class ResultDto
         return $this->status;
     }
 
-    public function getMessage(): ?Status
+    public function getMessage(): ?string
     {
-        return $this->status;
+        return $this->message;
     }
 
     public function getCompany(): ?QualifiedResult

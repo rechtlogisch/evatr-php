@@ -1,6 +1,8 @@
 <?php
 
 use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use Rechtlogisch\Evatr\DTO\ResultDto;
 use Rechtlogisch\Evatr\Enum\QualifiedResult;
 use Rechtlogisch\Evatr\Enum\Status;
@@ -27,15 +29,13 @@ it('parses response with minimal data', function () {
         'status' => 'evatr-0000',
     ];
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('A', 'B', $response);
 
     expect($dto->getHttpStatusCode())->toBe(200)
         ->and($dto->getTimestamp())->toBe('2023-08-07T12:00:00Z')
         ->and($dto->getStatus())->toBe(Status::EVATR_0000)
-        ->and($dto->getMessage())->toBe(Status::EVATR_0000)
+        ->and($dto->getMessage())->toBe('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.')
         ->and($dto->getCompany())->toBeNull()
         ->and($dto->getStreet())->toBeNull()
         ->and($dto->getZip())->toBeNull()
@@ -56,9 +56,7 @@ it('parses response with full qualified data', function () {
         'gueltigBis' => '2025-12-31',
     ];
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('X', 'Y', $response);
 
     expect($dto->getHttpStatusCode())->toBe(200)
@@ -80,19 +78,16 @@ it('includes raw response when requested', function () {
         'status' => 'evatr-0000',
     ];
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $response = new Response(
         200,
         ['Content-Type' => 'application/json', 'X-Custom-Header' => 'test'],
         json_encode($responseData, JSON_THROW_ON_ERROR)
     );
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('X', 'Y', $response, true);
 
     $raw = $dto->getRaw();
     expect($raw)->not()->toBeNull();
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $rawData = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
     expect($rawData)->toHaveKey('headers')
         ->and($rawData)->toHaveKey('data')
@@ -106,9 +101,7 @@ it('does not include raw response when not requested', function () {
         'status' => 'evatr-0000',
     ];
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('X', 'Y', $response, false);
 
     expect($dto->getRaw())->toBeNull();
@@ -120,9 +113,7 @@ it('handles different status codes', function () {
         'status' => 'evatr-0004',
     ];
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $response = new Response(400, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('A', 'B', $response);
 
     expect($dto->getHttpStatusCode())->toBe(400)
@@ -137,9 +128,7 @@ it('converts to array correctly', function () {
         'ergStrasse' => 'B',
     ];
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('X', 'Y', $response);
 
     $array = $dto->toArray();
@@ -164,13 +153,11 @@ it('converts to array correctly', function () {
 it('handles malformed JSON gracefully', function () {
     $response = new Response(200, ['Content-Type' => 'application/json'], 'invalid json');
 
-    /** @noinspection PhpUnhandledExceptionInspection */
     new ResultDto('A', 'B', $response);
 })->throws(JsonException::class);
 
 it('handles empty response body', function () {
     $response = new Response(200, ['Content-Type' => 'application/json'], '{}');
-    /** @noinspection PhpUnhandledExceptionInspection */
     $dto = new ResultDto('A', 'B', $response);
 
     expect($dto->getHttpStatusCode())->toBe(200)
@@ -180,17 +167,37 @@ it('handles empty response body', function () {
 });
 
 it('handles raw response with invalid JSON in setRaw', function () {
-    $responseData = [
-        'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
-        'status' => 'evatr-0000',
-    ];
+    // Create a mocked response that forces json_encode() to throw due to malformed UTF-8
+    $invalid = "\xB1\x31"; // invalid UTF-8 (in headers)
+    $validBody = '{"ok":true}'; // valid JSON so constructor parsing succeeds
 
-    // Create a mock response that will cause JSON encoding to fail in setRaw
-    /** @noinspection PhpUnhandledExceptionInspection */
-    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    /** @noinspection PhpUnhandledExceptionInspection */
+    $stream = Mockery::mock(StreamInterface::class);
+    $stream->shouldReceive('getContents')->andReturn($validBody);
+
+    $response = Mockery::mock(ResponseInterface::class);
+    $response->shouldReceive('getHeaders')->andReturn(['X-Bad' => [$invalid]]);
+    $response->shouldReceive('getBody')->andReturn($stream);
+    $response->shouldReceive('getStatusCode')->andReturn(200);
+
     $dto = new ResultDto('A', 'B', $response, true);
 
-    // The raw should still be set, even if JSON encoding fails
-    expect($dto->getRaw())->not()->toBeNull();
+    // When json_encode throws, setRaw() should fall back to the plain body string
+    expect($dto->getRaw())->toBe($validBody);
+});
+
+it('handles valid JSON that is not an array by resetting to empty data', function () {
+    // Body is valid JSON (boolean true) but not an array; should not throw and should result in empty parsed data
+    $response = new Response(200, ['Content-Type' => 'application/json'], 'true');
+    $dto = new ResultDto('A', 'B', $response);
+
+    expect($dto->getHttpStatusCode())->toBe(200)
+        ->and($dto->getTimestamp())->toBeNull()
+        ->and($dto->getStatus())->toBeNull()
+        ->and($dto->getMessage())->toBeNull()
+        ->and($dto->getCompany())->toBeNull()
+        ->and($dto->getStreet())->toBeNull()
+        ->and($dto->getZip())->toBeNull()
+        ->and($dto->getLocation())->toBeNull()
+        ->and($dto->getDateFrom())->toBeNull()
+        ->and($dto->getDateTill())->toBeNull();
 });

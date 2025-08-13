@@ -28,10 +28,7 @@ try {
     $remoteData = json_decode($remoteJson, true, 512, JSON_THROW_ON_ERROR);
 
     // Build local map from embedded StatusMessages::MESSAGES_DE
-    $localMap = [];
-    foreach (StatusMessages::MESSAGES_DE as $code => $data) {
-        $localMap[$code] = (string) ($data['message'] ?? '');
-    }
+    $localMap = array_map(static fn ($data) => (string) ($data['message'] ?? ''), StatusMessages::MESSAGES_DE);
     ksort($localMap);
 
     $remoteMap = StatusMessagesComparer::toGermanMap($remoteData);

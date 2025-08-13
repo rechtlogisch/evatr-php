@@ -16,8 +16,8 @@ final class StatusMessagesComparer
     {
         $map = [];
         foreach ($data as $item) {
-            $status = (string) ($item['status'] ?? '');
-            $message = (string) ($item['meldung'] ?? '');
+            $status = isset($item['status']) && is_string($item['status']) ? $item['status'] : '';
+            $message = isset($item['meldung']) && is_string($item['meldung']) ? $item['meldung'] : '';
             if ($status !== '') {
                 $map[$status] = $message;
             }
