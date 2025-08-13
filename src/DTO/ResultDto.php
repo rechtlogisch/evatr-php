@@ -15,6 +15,8 @@ use Throwable;
 
 final class ResultDto
 {
+    private ?string $id;
+
     private ?string $timestamp;
 
     private ?Status $status;
@@ -63,7 +65,20 @@ final class ResultDto
             );
         }
 
-        if (empty($data) || ! isset($data['status'])) {
+        if (empty($data) || ! isset($data['anfrageZeitpunkt'])) {
+            throw new ErrorResponse(
+                httpCode: $this->response->getStatusCode(),
+                error: 'Unexpected response format: missing anfrageZeitpunkt',
+                exception: new RuntimeException('Unexpected response format: missing anfrageZeitpunkt'),
+                raw: $this->response->getBody()->getContents(),
+                meta: [
+                    'endpoint' => Evatr::URL_VALIDATION,
+                    'errorType' => 'unexpected_response',
+                ]
+            );
+        }
+
+        if (! isset($data['status'])) {
             throw new ErrorResponse(
                 httpCode: $this->response->getStatusCode(),
                 error: 'Unexpected response format: missing status',
@@ -76,9 +91,14 @@ final class ResultDto
             );
         }
 
-        $this->timestamp = isset($data['anfrageZeitpunkt']) && is_string($data['anfrageZeitpunkt'])
-            ? $data['anfrageZeitpunkt']
+        $this->id = isset($data['id']) && is_string($data['id'])
+            ? $data['id']
             : null;
+        $this->timestamp = match (gettype($data['anfrageZeitpunkt'])) {
+            'string' => $data['anfrageZeitpunkt'],
+            'integer' => (string) $data['anfrageZeitpunkt'],
+            default => null,
+        };
         $this->status = is_string($data['status'])
             ? Status::from($data['status'])
             : null;
@@ -146,6 +166,11 @@ final class ResultDto
         return $this->vatIdForeign;
     }
 
+    public function getId(): ?string
+    {
+        return $this->id ?? null;
+    }
+
     public function getTimestamp(): ?string
     {
         return $this->timestamp;
@@ -204,6 +229,7 @@ final class ResultDto
     public function toArray(): array
     {
         return [
+            'id' => $this->id,
             'timestamp' => $this->timestamp,
             'status' => $this->status?->value,
             'message' => $this->message ?? null,
