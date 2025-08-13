@@ -8,6 +8,9 @@ use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Rechtlogisch\Evatr\Enum\QualifiedResult;
 use Rechtlogisch\Evatr\Enum\Status;
+use Rechtlogisch\Evatr\Evatr;
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
+use RuntimeException;
 use Throwable;
 
 final class ResultDto
@@ -34,25 +37,49 @@ final class ResultDto
 
     private ?string $raw = null;
 
-    /**
-     * @throws JsonException
-     */
     public function __construct(
         private readonly string $vatIdOwn,
         private readonly string $vatIdForeign,
-        private readonly ?ResponseInterface $response = null,
+        private readonly ResponseInterface $response,
         bool $includeRaw = false,
     ) {
-        $body = $this->response?->getBody()->getContents();
-        $data = $body ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
-        if (! is_array($data)) {
-            $data = [];
+        $body = $this->response->getBody()->getContents();
+        $this->response->getBody()->rewind();
+
+        try {
+            /** @var array<mixed> $data */
+            $data = ! empty($body) ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
+        } catch (JsonException $e) {
+            throw new ErrorResponse(
+                httpCode: $this->response->getStatusCode(),
+                error: 'Invalid JSON response',
+                exception: $e,
+                raw: $body,
+                meta: [
+                    'endpoint' => Evatr::URL_VALIDATION,
+                    'errorType' => 'invalid_json',
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }
+
+        if (empty($data) || ! isset($data['status'])) {
+            throw new ErrorResponse(
+                httpCode: $this->response->getStatusCode(),
+                error: 'Unexpected response format: missing status',
+                exception: new RuntimeException('Unexpected response format: missing status'),
+                raw: $this->response->getBody()->getContents(),
+                meta: [
+                    'endpoint' => Evatr::URL_VALIDATION,
+                    'errorType' => 'unexpected_response',
+                ]
+            );
         }
 
         $this->timestamp = isset($data['anfrageZeitpunkt']) && is_string($data['anfrageZeitpunkt'])
             ? $data['anfrageZeitpunkt']
             : null;
-        $this->status = isset($data['status']) && is_string($data['status'])
+        $this->status = is_string($data['status'])
             ? Status::from($data['status'])
             : null;
         if (isset($this->status)) {
@@ -73,9 +100,9 @@ final class ResultDto
         $this->dateFrom = isset($data['gueltigAb']) && is_string($data['gueltigAb']) ? $data['gueltigAb'] : null;
         $this->dateTill = isset($data['gueltigBis']) && is_string($data['gueltigBis']) ? $data['gueltigBis'] : null;
 
-        $this->setHttpStatusCode($this->response?->getStatusCode());
+        $this->setHttpStatusCode($this->response->getStatusCode());
 
-        if ($includeRaw && $this->response !== null) {
+        if ($includeRaw === true) {
             $this->setRaw($this->response);
         }
     }

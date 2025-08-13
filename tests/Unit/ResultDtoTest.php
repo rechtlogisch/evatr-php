@@ -6,22 +6,7 @@ use Psr\Http\Message\StreamInterface;
 use Rechtlogisch\Evatr\DTO\ResultDto;
 use Rechtlogisch\Evatr\Enum\QualifiedResult;
 use Rechtlogisch\Evatr\Enum\Status;
-
-it('can be instantiated without response', function () {
-    $dto = new ResultDto('A', 'B');
-
-    expect($dto->getHttpStatusCode())->toBeNull()
-        ->and($dto->getTimestamp())->toBeNull()
-        ->and($dto->getStatus())->toBeNull()
-        ->and($dto->getMessage())->toBeNull()
-        ->and($dto->getCompany())->toBeNull()
-        ->and($dto->getStreet())->toBeNull()
-        ->and($dto->getZip())->toBeNull()
-        ->and($dto->getLocation())->toBeNull()
-        ->and($dto->getDateFrom())->toBeNull()
-        ->and($dto->getDateTill())->toBeNull()
-        ->and($dto->getRaw())->toBeNull();
-});
+use Rechtlogisch\Evatr\Exception\ErrorResponse;
 
 it('parses response with minimal data', function () {
     $responseData = [
@@ -42,6 +27,42 @@ it('parses response with minimal data', function () {
         ->and($dto->getLocation())->toBeNull()
         ->and($dto->getDateFrom())->toBeNull()
         ->and($dto->getDateTill())->toBeNull();
+});
+
+it('sets timestamp to null when missing', function () {
+    $responseData = [
+        // 'anfrageZeitpunkt' intentionally omitted
+        'status' => 'evatr-0000',
+    ];
+
+    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
+    $dto = new ResultDto('X', 'Y', $response);
+
+    expect($dto->getTimestamp())->toBeNull()
+        ->and($dto->getStatus())->toBe(Status::EVATR_0000)
+        ->and($dto->getMessage())->toBe('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+});
+
+it('falls back to plain body for raw when headers cause json_encode to fail', function () {
+    // valid body to pass JSON parsing
+    $validBody = json_encode([
+        'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
+        'status' => 'evatr-0000',
+    ], JSON_THROW_ON_ERROR);
+
+    // Prepare mocked response with invalid UTF-8 in headers to trigger json_encode error in setRaw()
+    $stream = Mockery::mock(StreamInterface::class);
+    $stream->shouldReceive('getContents')->andReturn($validBody);
+    $stream->shouldReceive('rewind')->andReturnNull();
+
+    $response = Mockery::mock(ResponseInterface::class);
+    $response->shouldReceive('getHeaders')->andReturn(['X-Bad' => ["\xB1\x31"]]);
+    $response->shouldReceive('getBody')->andReturn($stream);
+    $response->shouldReceive('getStatusCode')->andReturn(200);
+
+    $dto = new ResultDto('A', 'B', $response, includeRaw: true);
+
+    expect($dto->getRaw())->toBe($validBody);
 });
 
 it('parses response with full qualified data', function () {
@@ -83,7 +104,7 @@ it('includes raw response when requested', function () {
         ['Content-Type' => 'application/json', 'X-Custom-Header' => 'test'],
         json_encode($responseData, JSON_THROW_ON_ERROR)
     );
-    $dto = new ResultDto('X', 'Y', $response, true);
+    $dto = new ResultDto('X', 'Y', $response, includeRaw: true);
 
     $raw = $dto->getRaw();
     expect($raw)->not()->toBeNull();
@@ -102,7 +123,7 @@ it('does not include raw response when not requested', function () {
     ];
 
     $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
-    $dto = new ResultDto('X', 'Y', $response, false);
+    $dto = new ResultDto('X', 'Y', $response, includeRaw: false);
 
     expect($dto->getRaw())->toBeNull();
 });
@@ -150,54 +171,31 @@ it('converts to array correctly', function () {
     ]);
 });
 
-it('handles malformed JSON gracefully', function () {
+it('throws when response body is invalid JSON', function () {
     $response = new Response(200, ['Content-Type' => 'application/json'], 'invalid json');
-
     new ResultDto('A', 'B', $response);
-})->throws(JsonException::class);
+})->throws(ErrorResponse::class, 'Invalid JSON response');
 
-it('handles empty response body', function () {
+it('throws when response body is an empty object', function () {
     $response = new Response(200, ['Content-Type' => 'application/json'], '{}');
-    $dto = new ResultDto('A', 'B', $response);
+    new ResultDto('A', 'B', $response);
+})->throws(ErrorResponse::class, 'Unexpected response format: missing status');
 
-    expect($dto->getHttpStatusCode())->toBe(200)
-        ->and($dto->getTimestamp())->toBeNull()
-        ->and($dto->getStatus())->toBeNull()
-        ->and($dto->getMessage())->toBeNull();
-});
-
-it('handles raw response with invalid JSON in setRaw', function () {
-    // Create a mocked response that forces json_encode() to throw due to malformed UTF-8
-    $invalid = "\xB1\x31"; // invalid UTF-8 (in headers)
-    $validBody = '{"ok":true}'; // valid JSON so constructor parsing succeeds
-
-    $stream = Mockery::mock(StreamInterface::class);
-    $stream->shouldReceive('getContents')->andReturn($validBody);
-
-    $response = Mockery::mock(ResponseInterface::class);
-    $response->shouldReceive('getHeaders')->andReturn(['X-Bad' => [$invalid]]);
-    $response->shouldReceive('getBody')->andReturn($stream);
-    $response->shouldReceive('getStatusCode')->andReturn(200);
-
-    $dto = new ResultDto('A', 'B', $response, true);
-
-    // When json_encode throws, setRaw() should fall back to the plain body string
-    expect($dto->getRaw())->toBe($validBody);
-});
-
-it('handles valid JSON that is not an array by resetting to empty data', function () {
+it('throws when content type is application/json but body is not an array', function () {
     // Body is valid JSON (boolean true) but not an array; should not throw and should result in empty parsed data
     $response = new Response(200, ['Content-Type' => 'application/json'], 'true');
-    $dto = new ResultDto('A', 'B', $response);
+    new ResultDto('A', 'B', $response);
+})->throws(ErrorResponse::class, 'Unexpected response format: missing status');
 
-    expect($dto->getHttpStatusCode())->toBe(200)
-        ->and($dto->getTimestamp())->toBeNull()
-        ->and($dto->getStatus())->toBeNull()
-        ->and($dto->getMessage())->toBeNull()
-        ->and($dto->getCompany())->toBeNull()
-        ->and($dto->getStreet())->toBeNull()
-        ->and($dto->getZip())->toBeNull()
-        ->and($dto->getLocation())->toBeNull()
-        ->and($dto->getDateFrom())->toBeNull()
-        ->and($dto->getDateTill())->toBeNull();
+it('handles present but non-string status gracefully', function () {
+    $responseData = [
+        'anfrageZeitpunkt' => '2023-08-07T12:00:00Z',
+        'status' => 1234,
+    ];
+
+    $response = new Response(200, ['Content-Type' => 'application/json'], json_encode($responseData, JSON_THROW_ON_ERROR));
+    $dto = new ResultDto('X', 'Y', $response);
+
+    expect($dto->getStatus())->toBeNull()
+        ->and($dto->getMessage())->toBeNull();
 });

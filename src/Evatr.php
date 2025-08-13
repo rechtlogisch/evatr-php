@@ -8,12 +8,13 @@ use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
+use Psr\Http\Message\ResponseInterface;
 use Rechtlogisch\Evatr\DTO\RequestDto;
 use Rechtlogisch\Evatr\DTO\ResultDto;
 use Rechtlogisch\Evatr\DTO\StatusMessage;
+use Rechtlogisch\Evatr\Enum\HttpMethod;
 use Rechtlogisch\Evatr\Exception\ErrorResponse;
 use Rechtlogisch\Evatr\Exception\InputError;
-use RuntimeException;
 
 class Evatr
 {
@@ -66,62 +67,18 @@ class Evatr
      */
     public function check(): ResultDto
     {
-        try {
-            $response = $this->client->post(self::URL_VALIDATION, [
-                'json' => $this->request->toArray(),
-            ]);
+        [
+            'response' => $response,
+        ] = self::requestJson($this->client, HttpMethod::POST, self::URL_VALIDATION, [
+            'json' => $this->request->toArray(),
+        ]);
 
-            // Validate JSON and required key without throwing to the outside
-            $body = $response->getBody()->getContents();
-            $response->getBody()->rewind();
-            try {
-                /** @var array<string,mixed> $data */
-                $data = $body !== '' ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
-            } catch (JsonException $e) {
-                throw new ErrorResponse(
-                    httpCode: $response->getStatusCode(),
-                    error: 'Invalid JSON response',
-                    exception: $e,
-                    raw: $body,
-                    meta: [
-                        'endpoint' => self::URL_VALIDATION,
-                        'errorType' => 'invalid_json',
-                        'exception' => $e->getMessage(),
-                    ]
-                );
-            }
-
-            if (! isset($data['status'])) {
-                throw new ErrorResponse(
-                    httpCode: $response->getStatusCode(),
-                    error: 'Unexpected response format: missing status',
-                    exception: new RuntimeException('Unexpected response format: missing status'),
-                    raw: $body,
-                    meta: [
-                        'endpoint' => self::URL_VALIDATION,
-                        'errorType' => 'unexpected_response',
-                    ]
-                );
-            }
-
-            return new ResultDto(
-                $this->request->getVatIdOwn(),
-                $this->request->getVatIdForeign(),
-                $response,
-                $this->request->getIncludeRaw(),
-            );
-        } catch (GuzzleException $e) {
-            throw new ErrorResponse(
-                httpCode: 0,
-                error: $e->getMessage(),
-                exception: $e,
-                raw: null,
-                meta: [
-                    'endpoint' => self::URL_VALIDATION,
-                    'errorType' => 'network',
-                ]
-            );
-        }
+        return new ResultDto(
+            $this->request->getVatIdOwn(),
+            $this->request->getVatIdForeign(),
+            $response,
+            $this->request->getIncludeRaw(),
+        );
     }
 
     public function includeRaw(bool $value = true): self
@@ -160,6 +117,62 @@ class Evatr
     }
 
     /**
+     * Execute an HTTP request and decode its JSON body, wrapping errors in ErrorResponse.
+     *
+     * @param  array<string,mixed>  $options
+     * @return array{response: ResponseInterface, data: array<mixed>}
+     *
+     * @throws ErrorResponse
+     */
+    private static function requestJson(Client $client, HttpMethod $method, string $endpoint, array $options = []): array
+    {
+        try {
+            $response = match ($method) {
+                HttpMethod::GET => $client->get($endpoint),
+                HttpMethod::POST => $client->post($endpoint, $options),
+            };
+
+            if ($method === HttpMethod::GET) {
+                $body = $response->getBody()->getContents();
+                $response->getBody()->rewind();
+
+                try {
+                    /** @var array<mixed> $data */
+                    $data = ! empty($body) ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
+                } catch (JsonException $e) {
+                    throw new ErrorResponse(
+                        httpCode: $response->getStatusCode(),
+                        error: 'Invalid JSON response',
+                        exception: $e,
+                        raw: $body,
+                        meta: [
+                            'endpoint' => $endpoint,
+                            'errorType' => 'invalid_json',
+                            'exception' => $e->getMessage(),
+                        ]
+                    );
+                }
+            }
+
+            return [
+                'response' => $response,
+                'data' => $data ?? [],
+            ];
+        } catch (GuzzleException $e) {
+            throw new ErrorResponse(
+                httpCode: 0,
+                error: $e->getMessage(),
+                exception: $e,
+                raw: null,
+                meta: [
+                    'endpoint' => $endpoint,
+                    'errorType' => 'network',
+                ]
+            );
+        }
+    }
+
+    /**
      * Retrieve status messages from the API.
      *
      * @return array<string, StatusMessage>
@@ -168,49 +181,19 @@ class Evatr
      */
     public static function getStatusMessages(?Client $testClient = null): array
     {
-        try {
-            $client = self::decideHttpClient($testClient);
-            $response = $client->get(self::URL_STATUS_MESSAGES);
-            $body = $response->getBody()->getContents();
-            $response->getBody()->rewind();
-            try {
-                /** @var array<int, array<string,mixed>> $data */
-                $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-            } catch (JsonException $e) {
-                throw new ErrorResponse(
-                    httpCode: $response->getStatusCode(),
-                    error: 'Invalid JSON response',
-                    exception: $e,
-                    raw: $body,
-                    meta: [
-                        'endpoint' => self::URL_STATUS_MESSAGES,
-                        'errorType' => 'invalid_json',
-                        'exception' => $e->getMessage(),
-                    ]
-                );
-            }
+        $client = self::decideHttpClient($testClient);
+        /** @var array<int, array<string,mixed>> $data */
+        ['data' => $data] = self::requestJson($client, HttpMethod::GET, self::URL_STATUS_MESSAGES);
 
-            $messages = [];
-            foreach ($data as $entry) {
-                if (! isset($entry['status']) || ! is_string($entry['status'])) {
-                    continue;
-                }
-                $messages[$entry['status']] = StatusMessage::fromArray($entry);
+        $messages = [];
+        foreach ($data as $entry) {
+            if (! isset($entry['status']) || ! is_string($entry['status'])) {
+                continue;
             }
-
-            return $messages;
-        } catch (GuzzleException $e) {
-            throw new ErrorResponse(
-                httpCode: 0,
-                error: $e->getMessage(),
-                exception: $e,
-                raw: null,
-                meta: [
-                    'endpoint' => self::URL_STATUS_MESSAGES,
-                    'errorType' => 'network',
-                ]
-            );
+            $messages[$entry['status']] = StatusMessage::fromArray($entry);
         }
+
+        return $messages;
     }
 
     /**
@@ -224,52 +207,22 @@ class Evatr
      */
     public static function getAvailability(bool $onlyNotAvailable = false, ?Client $testClient = null): array
     {
-        try {
-            $client = self::decideHttpClient($testClient);
-            $response = $client->get(self::URL_EU_MEMBER_STATES);
-            $body = $response->getBody()->getContents();
-            $response->getBody()->rewind();
-            try {
-                /** @var array<int, array<string,mixed>> $data */
-                $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-            } catch (JsonException $e) {
-                throw new ErrorResponse(
-                    httpCode: $response->getStatusCode(),
-                    error: 'Invalid JSON response',
-                    exception: $e,
-                    raw: $body,
-                    meta: [
-                        'endpoint' => self::URL_EU_MEMBER_STATES,
-                        'errorType' => 'invalid_json',
-                        'exception' => $e->getMessage(),
-                    ]
-                );
-            }
+        $client = self::decideHttpClient($testClient);
+        /** @var array<int, array<string,mixed>> $data */
+        ['data' => $data] = self::requestJson($client, HttpMethod::GET, self::URL_EU_MEMBER_STATES);
 
-            $map = [];
-            foreach ($data as $entry) {
-                if (! isset($entry['alpha2']) || ! is_string($entry['alpha2'])) {
-                    continue;
-                }
-                $map[$entry['alpha2']] = isset($entry['verfuegbar']) && $entry['verfuegbar'] === true;
+        $map = [];
+        foreach ($data as $entry) {
+            if (! isset($entry['alpha2']) || ! is_string($entry['alpha2'])) {
+                continue;
             }
-
-            if ($onlyNotAvailable === true) {
-                return array_filter($map, static fn (bool $available): bool => $available === false);
-            }
-
-            return $map;
-        } catch (GuzzleException $e) {
-            throw new ErrorResponse(
-                httpCode: 0,
-                error: $e->getMessage(),
-                exception: $e,
-                raw: null,
-                meta: [
-                    'endpoint' => self::URL_EU_MEMBER_STATES,
-                    'errorType' => 'network',
-                ]
-            );
+            $map[$entry['alpha2']] = isset($entry['verfuegbar']) && $entry['verfuegbar'] === true;
         }
+
+        if ($onlyNotAvailable === true) {
+            return array_filter($map, static fn (bool $available): bool => $available === false);
+        }
+
+        return $map;
     }
 }
