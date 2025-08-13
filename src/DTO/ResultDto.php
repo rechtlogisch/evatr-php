@@ -168,7 +168,7 @@ final class ResultDto
 
     public function getId(): ?string
     {
-        return $this->id ?? null;
+        return $this->id;
     }
 
     public function getTimestamp(): ?string
