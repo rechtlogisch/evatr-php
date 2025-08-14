@@ -21,4 +21,3 @@ composer.lock
 .DS_Store
 .env
 phpunit.xml
-phpstan.neon
