@@ -58,7 +58,7 @@ $result = (new Evatr(
   vatIdOwn: 'DE123456789',            // Your German VAT-ID (required)
   vatIdForeign: 'ATU12345678',        // VAT-ID to validate (required)
   company: 'Musterhaus GmbH & Co KG', // Company name (required for qualified confirmation)
-  location: 'musterort',              // City (required for qualified confirmation)
+  location: 'Musterort',              // City (required for qualified confirmation)
   street: 'Musterstrasse 22',         // Street address (optional)
   zip: '12345',                       // Postal code (optional)
 ))->check();
@@ -73,7 +73,7 @@ $result = confirmVatId(
   company: 'Musterhaus GmbH & Co KG',
   street: 'Musterstrasse 22',
   zip: '12345',
-  location: 'musterort',
+  location: 'Musterort',
 );
 ```
 
@@ -379,7 +379,7 @@ $qualifiedTestRequest = [
   'company' => 'Musterhaus GmbH & Co KG',
   'street' => 'Musterstrasse 22',
   'zip' => '12345',
-  'location' => 'musterort',
+  'location' => 'Musterort',
 ];
 ```
 

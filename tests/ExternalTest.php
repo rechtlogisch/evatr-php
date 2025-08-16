@@ -22,7 +22,7 @@ it('sends a request for qualified confirmation', function () {
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',
         company: 'Musterhaus GmbH & Co KG',
-        location: 'musterort',
+        location: 'Musterort',
         street: 'Musterstrasse 22',
         zip: '12345',
     ))->check();
@@ -85,7 +85,7 @@ it('sends a request and includes raw response when requested', function () {
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',
         company: 'Musterhaus GmbH & Co KG',
-        location: 'musterort',
+        location: 'Musterort',
         street: 'Musterstrasse 22',
         zip: '12345',
     ))->includeRaw()->check();
@@ -105,7 +105,7 @@ it('sends a qualified request with includeRaw and validates raw structure with p
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',
         company: 'Musterhaus GmbH & Co KG',
-        location: 'musterort',
+        location: 'Musterort',
         street: 'Musterstrasse 22',
         zip: '12345',
     ))->includeRaw()->check();
@@ -215,7 +215,7 @@ it('raw response contains only expected keys for qualified includeRaw', function
         vatIdOwn: 'DE123456789',
         vatIdForeign: 'ATU12345678',
         company: 'Musterhaus GmbH & Co KG',
-        location: 'musterort',
+        location: 'Musterort',
         street: 'Musterstrasse 22',
         zip: '12345',
     ))->includeRaw()->check();
