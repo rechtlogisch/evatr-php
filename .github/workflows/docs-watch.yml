@@ -12,7 +12,7 @@ jobs:
       group: docs-watch-${{ github.ref }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP 8.4 with Composer cache
         uses: shivammathur/setup-php@v2
