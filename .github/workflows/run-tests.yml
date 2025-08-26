@@ -57,19 +57,25 @@ jobs:
       - name: Execute tests
         run: composer ci
 
+      - name: Decide whether to run coverage and uploads
+        id: should_run
+        shell: bash
+        run: |
+          echo "run=${{ matrix.php == '8.4' && matrix.stability == 'prefer-stable' && matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/main' }}" >> $GITHUB_OUTPUT
+
       - name: Run test coverage
-        if: matrix.php == '8.4' && matrix.stability == 'prefer-stable' && matrix.os == 'ubuntu-latest'
+        if: steps.should_run.outputs.run == 'true'
         run: composer coverage
 
       - name: Upload test results to Codecov
-        if: matrix.php == '8.4' && matrix.stability == 'prefer-stable' && matrix.os == 'ubuntu-latest'
+        if: steps.should_run.outputs.run == 'true'
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
 
       - name: Upload code coverage to Codecov
-        if: matrix.php == '8.4' && matrix.stability == 'prefer-stable' && matrix.os == 'ubuntu-latest'
+        if: steps.should_run.outputs.run == 'true'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
