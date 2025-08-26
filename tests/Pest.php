@@ -25,7 +25,14 @@ function hasVatId(
 function fixtureContent(
     string $name,
 ): string {
-    $path = fixture($name);
+    if (function_exists('fixture')) {
+        $path = fixture($name);
+    } else {
+        $path = __DIR__."/Fixtures/{$name}";
+        if (! file_exists($path)) {
+            throw new RuntimeException("Fixture file {$path} does not exist.");
+        }
+    }
 
     return file_get_contents($path);
 }
