@@ -125,7 +125,7 @@ it('can perform check with mocked client', function () {
             ],
         ])
         ->andReturn(
-            new Response(200, ['Content-Type' => 'application/json'], fixture('response-simple-ok.json'))
+            new Response(200, ['Content-Type' => 'application/json'], fixtureContent('response-simple-ok.json'))
         );
 
     $evatr->setHttpClient($mockClient);
@@ -158,7 +158,7 @@ it('can perform check with qualified parameters', function () {
             ],
         ])
         ->andReturn(
-            new Response(200, ['Content-Type' => 'application/json'], fixture('response-qualified-ok.json'))
+            new Response(200, ['Content-Type' => 'application/json'], fixtureContent('response-qualified-ok.json'))
         );
 
     $evatr->setHttpClient($mockClient);
@@ -189,7 +189,7 @@ it('method chaining works correctly', function () {
     $mockClient->shouldReceive('post')
         ->once()
         ->andReturn(
-            new Response(200, ['Content-Type' => 'application/json'], fixture('response-simple-ok.json'))
+            new Response(200, ['Content-Type' => 'application/json'], fixtureContent('response-simple-ok.json'))
         );
 
     $result = $evatr

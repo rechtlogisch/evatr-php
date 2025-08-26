@@ -17,7 +17,7 @@ it('checks a vat-id', function (string $vatIdOwn, string $vatIdForeign) {
             ],
         ])
         ->andReturn(
-            new Response(200, ['Content-Type' => 'application/json'], fixture('response-simple-ok.json'))
+            new Response(200, ['Content-Type' => 'application/json'], fixtureContent('response-simple-ok.json'))
         );
 
     $result = (new Evatr(

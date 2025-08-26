@@ -22,15 +22,12 @@ function hasVatId(
 }
 
 // Result helpers
-function fixture(
+function fixtureContent(
     string $name,
 ): string {
-    $file = __DIR__."/Fixtures/{$name}";
-    if (! file_exists($file)) {
-        throw new RuntimeException("Fixture file {$file} does not exist.");
-    }
+    $path = fixture($name);
 
-    return file_get_contents($file);
+    return file_get_contents($path);
 }
 
 // Expectation helpers
