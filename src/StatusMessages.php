@@ -14,13 +14,13 @@ final class StatusMessages
      * @var array<string, array{category: ?string, httpCode: ?int, field: ?string, message: string}>
      */
     public const MESSAGES_DE = [
-        'evatr-0000' => ['category' => 'Ergebnis', 'httpCode' => 200, 'field' => null, 'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.'],
+        'evatr-0000' => ['category' => 'Ergebnis', 'httpCode' => 200, 'field' => null, 'message' => 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig.'],
         'evatr-0001' => ['category' => 'Hinweis', 'httpCode' => null, 'field' => 'datenschutz', 'message' => 'Bitte bestätigen Sie den Datenschutzhinweis.'],
         'evatr-0002' => ['category' => 'Hinweis', 'httpCode' => 400, 'field' => 'angefragteUstid', 'message' => 'Mindestens eins der Pflichtfelder ist nicht besetzt.'],
-        'evatr-0003' => ['category' => 'Hinweis', 'httpCode' => 400, 'field' => 'firmenname,ort', 'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig. Mindestens eines der Pflichtfelder für eine qualifizierte Bestätigungsanfrage ist nicht besetzt.'],
-        'evatr-0004' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'anfragendeUstid', 'message' => 'Die anfragende DE Ust-IdNr. ist syntaktisch falsch. Sie passt nicht in das deutsche Erzeugungsschema.'],
-        'evatr-0005' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'angefragteUstid', 'message' => 'Die angegebene angefragte Ust-IdNr. ist syntaktisch falsch.'],
-        'evatr-0006' => ['category' => 'Hinweis', 'httpCode' => 403, 'field' => 'anfragendeUstid', 'message' => 'Die anfragende DE USt-IdNr. ist nicht berechtigt eine DE Ust-IdNr. anzufragen.'],
+        'evatr-0003' => ['category' => 'Hinweis', 'httpCode' => 400, 'field' => 'firmenname,ort', 'message' => 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig. Mindestens eines der Pflichtfelder für eine qualifizierte Bestätigungsanfrage ist nicht besetzt.'],
+        'evatr-0004' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'anfragendeUstid', 'message' => 'Die anfragende DE USt-IdNr. ist syntaktisch falsch. Sie passt nicht in das deutsche Erzeugungsschema.'],
+        'evatr-0005' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'angefragteUstid', 'message' => 'Die angegebene angefragte USt-IdNr. ist syntaktisch falsch.'],
+        'evatr-0006' => ['category' => 'Hinweis', 'httpCode' => 403, 'field' => 'anfragendeUstid', 'message' => 'Die anfragende DE USt-IdNr. ist nicht berechtigt eine DE USt-IdNr. anzufragen.'],
         'evatr-0007' => ['category' => 'Hinweis', 'httpCode' => 403, 'field' => null, 'message' => 'Fehlerhafter Aufruf.'],
         'evatr-0008' => ['category' => 'Hinweis', 'httpCode' => 403, 'field' => null, 'message' => 'Die maximale Anzahl von qualifizierten Bestätigungsabfragen für diese Session wurde erreicht. Bitte starten Sie erneut mit einer einfachen Bestätigungsabfrage.'],
         'evatr-0011' => ['category' => 'Fehler', 'httpCode' => 503, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
@@ -34,11 +34,11 @@ final class StatusMessages
         'evatr-2002' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => 'angefragteUstid', 'message' => 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt nicht gültig. Sie ist erst gültig ab dem Datum im Feld gueltigAb.'],
         'evatr-2003' => ['category' => 'Fehler', 'httpCode' => 400, 'field' => 'angefragteUstid', 'message' => 'Das angegebene Länderkennzeichen der angefragten USt-IdNr. ist nicht gültig.'],
         'evatr-2004' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
-        'evatr-2005' => ['category' => 'Fehler', 'httpCode' => 404, 'field' => 'anfragendeUstid', 'message' => 'Die angegebene eigene DE Ust-IdNr. ist zum Anfragezeitpunkt nicht gültig.'],
-        'evatr-2006' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => 'angefragteUstid', 'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt nicht gültig. Sie war gültig im Zeitraum, der durch die Werte in den Feldern gueltigAb und gueltigBis beschrieben ist.'],
+        'evatr-2005' => ['category' => 'Fehler', 'httpCode' => 404, 'field' => 'anfragendeUstid', 'message' => 'Die angegebene eigene DE USt-IdNr. ist zum Anfragezeitpunkt nicht gültig.'],
+        'evatr-2006' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => 'angefragteUstid', 'message' => 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt nicht gültig. Sie war gültig im Zeitraum, der durch die Werte in den Feldern gueltigAb und gueltigBis beschrieben ist.'],
         'evatr-2007' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Bei der Verarbeitung der Daten aus dem angefragten EU-Mitgliedstaat ist ein Fehler aufgetreten. Ihre Anfrage kann deshalb nicht bearbeitet werden.'],
         // typo in official statusmeldungen.json: ... liegt einer Besonderheit vor ... instead of ... liegt eine Besonderheit vor ...
-        'evatr-2008' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => null, 'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig. Für die qualifizierte Bestätigungsanfrage liegt einer Besonderheit vor. Für Rückfragen wenden Sie sich an das BZSt.'],
+        'evatr-2008' => ['category' => 'Hinweis', 'httpCode' => 200, 'field' => null, 'message' => 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig. Für die qualifizierte Bestätigungsanfrage liegt einer Besonderheit vor. Für Rückfragen wenden Sie sich an das BZSt.'],
         'evatr-2011' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
         'evatr-3011' => ['category' => 'Fehler', 'httpCode' => 500, 'field' => null, 'message' => 'Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal.'],
     ];

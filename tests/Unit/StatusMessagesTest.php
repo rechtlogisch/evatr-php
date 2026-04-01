@@ -5,7 +5,7 @@ use Rechtlogisch\Evatr\StatusMessages;
 it('returns German messages by default', function () {
     unset($_ENV['EVATR_LANG']);
     $msg = StatusMessages::messageFor('evatr-0000');
-    expect($msg)->toBe('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+    expect($msg)->toBe('Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig.');
 });
 
 it('returns English messages when EVATR_LANG is set to en', function () {

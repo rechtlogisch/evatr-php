@@ -22,7 +22,7 @@ it('parses response with minimal data', function () {
         ->and($dto->getId())->toBe('0123456789abcdef')
         ->and($dto->getTimestamp())->toBe('2023-08-07T12:00:00Z')
         ->and($dto->getStatus())->toBe(Status::EVATR_0000)
-        ->and($dto->getMessage())->toBe('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.')
+        ->and($dto->getMessage())->toBe('Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig.')
         ->and($dto->getCompany())->toBeNull()
         ->and($dto->getStreet())->toBeNull()
         ->and($dto->getZip())->toBeNull()
@@ -153,7 +153,7 @@ it('converts to array correctly', function () {
         'id' => '0123456789abcdef',
         'timestamp' => '2023-08-07T12:00:00Z',
         'status' => 'evatr-0000',
-        'message' => 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.',
+        'message' => 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig.',
         'company' => 'A',
         'street' => 'B',
         'zip' => null,
