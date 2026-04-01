@@ -2,6 +2,10 @@
 
 All notable changes to `evatr` will be documented in this file.
 
+## v0.1.1 - 2026-04-01
+🚀 What’s in this Release:
+- 📨 Updated status messages based on official list
+
 ## v0.1.0 - 2025-08-13
 
 🚀 What’s in this Release:
